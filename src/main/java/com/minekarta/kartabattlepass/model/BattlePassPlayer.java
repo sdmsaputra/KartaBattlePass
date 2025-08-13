@@ -10,13 +10,15 @@ public class BattlePassPlayer {
     private int level;
     private int exp;
     private List<Integer> claimedRewards;
+    private List<String> completedMissions;
 
-    public BattlePassPlayer(UUID uuid, String name, int level, int exp, List<Integer> claimedRewards) {
+    public BattlePassPlayer(UUID uuid, String name, int level, int exp, List<Integer> claimedRewards, List<String> completedMissions) {
         this.uuid = uuid;
         this.name = name;
         this.level = level;
         this.exp = exp;
         this.claimedRewards = claimedRewards;
+        this.completedMissions = completedMissions;
     }
 
     public UUID getUuid() {
@@ -53,5 +55,13 @@ public class BattlePassPlayer {
 
     public void setClaimedRewards(List<Integer> claimedRewards) {
         this.claimedRewards = claimedRewards;
+    }
+
+    public List<String> getCompletedMissions() {
+        return completedMissions;
+    }
+
+    public void setCompletedMissions(List<String> completedMissions) {
+        this.completedMissions = completedMissions;
     }
 }
