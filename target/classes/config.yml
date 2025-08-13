@@ -1,0 +1,15 @@
+# KartaBattlePass Configuration
+
+# General BattlePass settings
+season: "Season 1 - Awakening"
+maxLevel: 50
+expPerLevel: 1000
+
+# Rewards per level
+# Format: level: "command_to_execute"
+# Placeholders: %player% for player name
+rewards:
+  1: "give %player% diamond 1"
+  5: "eco give %player% 100"
+  10: "lp user %player% parent addtemp supporter 7d"
+  50: "say %player% has completed the Battle Pass!"

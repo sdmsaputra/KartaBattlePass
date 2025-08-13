@@ -1,0 +1,6 @@
+# KartaBattlePass Messages
+# You can use MiniMessage format for messages.
+prefix: "<gray>[<gradient:#ffb86c:#ff79c6>KartaBattlePass</gradient>]</gray> "
+command:
+  no-permission: "<red>You don't have permission to use this command.</red>"
+  player-only: "<red>This command can only be used by players.</red>"

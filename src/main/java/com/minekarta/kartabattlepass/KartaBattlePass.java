@@ -1,0 +1,117 @@
+package com.minekarta.kartabattlepass;
+
+import com.minekarta.kartabattlepass.command.KBPCommand;
+import com.minekarta.kartabattlepass.expansion.BattlePassExpansion;
+import com.minekarta.kartabattlepass.listener.PlayerListener;
+import com.minekarta.kartabattlepass.storage.BattlePassStorage;
+import net.kyori.adventure.text.minimessage.MiniMessage;
+import org.bukkit.Bukkit;
+import org.bukkit.plugin.java.JavaPlugin;
+import org.bukkit.scheduler.BukkitRunnable;
+
+import java.io.File;
+
+public final class KartaBattlePass extends JavaPlugin {
+
+    private static KartaBattlePass instance;
+    private MiniMessage miniMessage;
+    private BattlePassStorage battlePassStorage;
+
+    @Override
+    public void onEnable() {
+        instance = this;
+        this.miniMessage = MiniMessage.miniMessage();
+
+        getLogger().info("Loading configurations...");
+        saveDefaultConfig();
+        saveDefaultResource("messages.yml");
+
+        getLogger().info("Initializing storage...");
+        this.battlePassStorage = new BattlePassStorage(this);
+
+        getLogger().info("Registering command...");
+        getCommand("kbp").setExecutor(new KBPCommand(this));
+
+        getLogger().info("Registering listeners...");
+        getServer().getPluginManager().registerEvents(new PlayerListener(this.battlePassStorage), this);
+
+        getLogger().info("Checking dependencies...");
+        checkDependencies();
+
+        getLogger().info("Starting autosave task...");
+        startAutosaveTask();
+
+        getLogger().info("KartaBattlePass v" + getDescription().getVersion() + " has been enabled!");
+    }
+
+    @Override
+    public void onDisable() {
+        getLogger().info("Saving all player data before disabling...");
+        if (this.battlePassStorage != null) {
+            this.battlePassStorage.saveAllPlayerData();
+        }
+        getLogger().info("KartaBattlePass has been disabled.");
+    }
+
+    private void startAutosaveTask() {
+        // Autosave every 5 minutes (5 * 60 * 20 = 6000 ticks)
+        long autosaveInterval = 20L * 60 * 5;
+        new BukkitRunnable() {
+            @Override
+            public void run() {
+                battlePassStorage.saveAllPlayerData();
+            }
+        }.runTaskTimerAsynchronously(this, autosaveInterval, autosaveInterval);
+    }
+
+    private void checkDependencies() {
+        if (Bukkit.getPluginManager().getPlugin("PlaceholderAPI") != null) {
+            new BattlePassExpansion(this).register();
+            getLogger().info("Successfully hooked into PlaceholderAPI.");
+        } else {
+            getLogger().warning("PlaceholderAPI not found, placeholders will not work. Disabling plugin.");
+            getServer().getPluginManager().disablePlugin(this);
+            return; // Stop further execution
+        }
+
+        if (Bukkit.getPluginManager().getPlugin("Vault") != null) {
+            getLogger().info("Successfully hooked into Vault.");
+            // new VaultHook(); // Initialize hook
+        } else {
+            getLogger().warning("Vault not found, some economy features might be disabled.");
+        }
+
+        if (Bukkit.getPluginManager().getPlugin("Citizens") != null) {
+            getLogger().info("Successfully hooked into Citizens.");
+            // new CitizensHook(); // Initialize hook
+        } else {
+            getLogger().warning("Citizens not found, NPC features will not work.");
+        }
+
+        if (Bukkit.getPluginManager().getPlugin("FancyNPC") != null) {
+            getLogger().info("Successfully hooked into FancyNPC.");
+            // new FancyNPCHook(); // Initialize hook
+        } else {
+            getLogger().warning("FancyNPC not found, fancy NPC features will not work.");
+        }
+    }
+
+    private void saveDefaultResource(String resourcePath) {
+        File resourceFile = new File(getDataFolder(), resourcePath);
+        if (!resourceFile.exists()) {
+            saveResource(resourcePath, false);
+        }
+    }
+
+    public static KartaBattlePass getInstance() {
+        return instance;
+    }
+
+    public MiniMessage getMiniMessage() {
+        return miniMessage;
+    }
+
+    public BattlePassStorage getBattlePassStorage() {
+        return battlePassStorage;
+    }
+}
