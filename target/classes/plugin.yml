@@ -1,0 +1,17 @@
+name: KartaBattlePass
+version: '1.0.0'
+main: com.minekarta.kartabattlepass.KartaBattlePass
+api-version: '1.21'
+authors: [MinekartaStudio]
+description: A BattlePass plugin.
+depend:
+  - PlaceholderAPI
+softdepend:
+  - Vault
+  - Citizens
+  - FancyNPC
+commands:
+  kbp:
+    description: Main command for KartaBattlePass.
+    usage: /<command>
+    aliases: [battlepass, bp]
