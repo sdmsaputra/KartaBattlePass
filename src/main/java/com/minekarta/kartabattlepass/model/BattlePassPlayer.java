@@ -9,10 +9,10 @@ public class BattlePassPlayer {
     private String name;
     private int level;
     private int exp;
-    private List<Integer> claimedRewards;
+    private List<String> claimedRewards;
     private List<String> completedMissions;
 
-    public BattlePassPlayer(UUID uuid, String name, int level, int exp, List<Integer> claimedRewards, List<String> completedMissions) {
+    public BattlePassPlayer(UUID uuid, String name, int level, int exp, List<String> claimedRewards, List<String> completedMissions) {
         this.uuid = uuid;
         this.name = name;
         this.level = level;
@@ -49,11 +49,11 @@ public class BattlePassPlayer {
         this.exp = exp;
     }
 
-    public List<Integer> getClaimedRewards() {
+    public List<String> getClaimedRewards() {
         return claimedRewards;
     }
 
-    public void setClaimedRewards(List<Integer> claimedRewards) {
+    public void setClaimedRewards(List<String> claimedRewards) {
         this.claimedRewards = claimedRewards;
     }
 
