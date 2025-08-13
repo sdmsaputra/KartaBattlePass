@@ -5,6 +5,7 @@ com/minekarta/kartabattlepass/model/BattlePassPlayer.class
 com/minekarta/kartabattlepass/hooks/FancyNPCHook.class
 com/minekarta/kartabattlepass/storage/BattlePassStorage.class
 com/minekarta/kartabattlepass/service/QuestService.class
+com/minekarta/kartabattlepass/event/PlayerBattlePassLevelUpEvent.class
 com/minekarta/kartabattlepass/service/SeasonService.class
 com/minekarta/kartabattlepass/hooks/CitizensHook.class
 com/minekarta/kartabattlepass/gui/MainGUI.class

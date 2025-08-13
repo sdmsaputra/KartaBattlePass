@@ -1,12 +1,13 @@
 /app/src/main/java/com/minekarta/kartabattlepass/KartaBattlePass.java
 /app/src/main/java/com/minekarta/kartabattlepass/hooks/VaultHook.java
-/app/src/main/java/com/minekarta/kartabattlepass/command/KBPCommand.java
 /app/src/main/java/com/minekarta/kartabattlepass/service/SeasonService.java
 /app/src/main/java/com/minekarta/kartabattlepass/hooks/CitizensHook.java
-/app/src/main/java/com/minekarta/kartabattlepass/gui/MainGUI.java
 /app/src/main/java/com/minekarta/kartabattlepass/model/BattlePassPlayer.java
+/app/src/main/java/com/minekarta/kartabattlepass/gui/MainGUI.java
+/app/src/main/java/com/minekarta/kartabattlepass/event/PlayerBattlePassLevelUpEvent.java
+/app/src/main/java/com/minekarta/kartabattlepass/listener/PlayerListener.java
+/app/src/main/java/com/minekarta/kartabattlepass/command/KBPCommand.java
 /app/src/main/java/com/minekarta/kartabattlepass/expansion/BattlePassExpansion.java
 /app/src/main/java/com/minekarta/kartabattlepass/storage/BattlePassStorage.java
 /app/src/main/java/com/minekarta/kartabattlepass/service/QuestService.java
 /app/src/main/java/com/minekarta/kartabattlepass/hooks/FancyNPCHook.java
-/app/src/main/java/com/minekarta/kartabattlepass/listener/PlayerListener.java

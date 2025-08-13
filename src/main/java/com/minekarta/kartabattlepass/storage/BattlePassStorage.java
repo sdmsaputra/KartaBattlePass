@@ -1,6 +1,7 @@
 package com.minekarta.kartabattlepass.storage;
 
 import com.minekarta.kartabattlepass.KartaBattlePass;
+import com.minekarta.kartabattlepass.event.PlayerBattlePassLevelUpEvent;
 import com.minekarta.kartabattlepass.model.BattlePassPlayer;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.FileConfiguration;
@@ -9,7 +10,11 @@ import org.bukkit.entity.Player;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+import java.util.UUID;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.logging.Level;
 
 public class BattlePassStorage {
@@ -17,10 +22,10 @@ public class BattlePassStorage {
     private final KartaBattlePass plugin;
     private final File dataFile;
     private FileConfiguration dataConfig;
-    private final Map<UUID, BattlePassPlayer> playerData = new HashMap<>();
+    private final Map<UUID, BattlePassPlayer> playerData = new ConcurrentHashMap<>();
+    private final Object saveLock = new Object();
 
     private int maxLevel;
-    private int expPerLevel;
 
     public BattlePassStorage(KartaBattlePass plugin) {
         this.plugin = plugin;
@@ -45,56 +50,76 @@ public class BattlePassStorage {
         plugin.reloadConfig();
         FileConfiguration config = plugin.getConfig();
         this.maxLevel = config.getInt("battlepass.maxLevel", 50);
-        this.expPerLevel = config.getInt("battlepass.expPerLevel", 1000);
     }
 
     public void loadPlayerData(Player player) {
         UUID uuid = player.getUniqueId();
         String path = uuid.toString();
 
-        // Refresh the data from the file before loading
-        this.dataConfig = YamlConfiguration.loadConfiguration(dataFile);
+        // Run asynchronously to avoid blocking the main thread for file I/O
+        plugin.getServer().getScheduler().runTaskAsynchronously(plugin, () -> {
+            // Refresh the data from the file before loading
+            FileConfiguration fileData = YamlConfiguration.loadConfiguration(dataFile);
+            BattlePassPlayer bpPlayer;
 
-        if (dataConfig.isConfigurationSection(path)) {
-            ConfigurationSection section = dataConfig.getConfigurationSection(path);
-            String name = section.getString("name", player.getName());
-            int level = section.getInt("level", 1);
-            int exp = section.getInt("exp", 0);
-            List<Integer> claimedRewards = section.getIntegerList("claimedRewards");
+            if (fileData.isConfigurationSection(path)) {
+                ConfigurationSection section = fileData.getConfigurationSection(path);
+                String name = section.getString("name", player.getName());
+                int level = section.getInt("level", 1);
+                int exp = section.getInt("exp", 0);
+                List<Integer> claimedRewards = section.getIntegerList("claimedRewards");
+                List<String> completedMissions = section.getStringList("completedMissions");
 
-            BattlePassPlayer bpPlayer = new BattlePassPlayer(uuid, name, level, exp, claimedRewards);
-            playerData.put(uuid, bpPlayer);
-        } else {
-            // Create new player data
-            BattlePassPlayer bpPlayer = new BattlePassPlayer(uuid, player.getName(), 1, 0, new ArrayList<>());
-            playerData.put(uuid, bpPlayer);
-        }
-        plugin.getLogger().info("Loaded data for player " + player.getName());
+                bpPlayer = new BattlePassPlayer(uuid, name, level, exp, claimedRewards, completedMissions);
+            } else {
+                // Create new player data
+                bpPlayer = new BattlePassPlayer(uuid, player.getName(), 1, 0, new ArrayList<>(), new ArrayList<>());
+            }
+
+            // Put the loaded data into the cache on the main thread
+            plugin.getServer().getScheduler().runTask(plugin, () -> {
+                playerData.put(uuid, bpPlayer);
+                plugin.getLogger().info("Loaded data for player " + player.getName());
+            });
+        });
     }
 
-    public void savePlayerData(UUID uuid, boolean saveToFile) {
+    public void savePlayerData(UUID uuid, boolean async) {
         BattlePassPlayer bpPlayer = playerData.get(uuid);
         if (bpPlayer == null) {
             return; // No data to save
         }
 
-        String path = uuid.toString();
-        dataConfig.set(path + ".name", bpPlayer.getName());
-        dataConfig.set(path + ".level", bpPlayer.getLevel());
-        dataConfig.set(path + ".exp", bpPlayer.getExp());
-        dataConfig.set(path + ".claimedRewards", bpPlayer.getClaimedRewards());
+        Runnable saveTask = () -> {
+            synchronized (saveLock) {
+                // Load the latest data from the file before saving to avoid overwriting changes
+                FileConfiguration currentData = YamlConfiguration.loadConfiguration(dataFile);
 
-        if (saveToFile) {
-            try {
-                dataConfig.save(dataFile);
-            } catch (IOException e) {
-                plugin.getLogger().log(Level.SEVERE, "Could not save player data for " + uuid, e);
+                String path = uuid.toString();
+                currentData.set(path + ".name", bpPlayer.getName());
+                currentData.set(path + ".level", bpPlayer.getLevel());
+                currentData.set(path + ".exp", bpPlayer.getExp());
+                currentData.set(path + ".claimedRewards", bpPlayer.getClaimedRewards());
+                currentData.set(path + ".completedMissions", bpPlayer.getCompletedMissions());
+
+                try {
+                    currentData.save(dataFile);
+                } catch (IOException e) {
+                    plugin.getLogger().log(Level.SEVERE, "Could not save player data for " + uuid, e);
+                }
             }
+        };
+
+        if (async) {
+            plugin.getServer().getScheduler().runTaskAsynchronously(plugin, saveTask);
+        } else {
+            saveTask.run();
         }
     }
 
     public void unloadPlayerData(Player player) {
         UUID uuid = player.getUniqueId();
+        // Save data asynchronously on logout
         savePlayerData(uuid, true);
         playerData.remove(uuid);
         plugin.getLogger().info("Saved and unloaded data for player " + player.getName());
@@ -105,37 +130,94 @@ public class BattlePassStorage {
             return;
         }
 
-        for (UUID uuid : playerData.keySet()) {
-            savePlayerData(uuid, false); // Save to config object without writing to file each time
-        }
+        plugin.getServer().getScheduler().runTaskAsynchronously(plugin, () -> {
+            synchronized (saveLock) {
+                FileConfiguration currentData = YamlConfiguration.loadConfiguration(dataFile);
 
-        try {
-            dataConfig.save(dataFile);
-            plugin.getLogger().info("Successfully saved all player data.");
-        } catch (IOException e) {
-            plugin.getLogger().log(Level.SEVERE, "Could not save all player data to players.yml!", e);
-        }
+                for (Map.Entry<UUID, BattlePassPlayer> entry : playerData.entrySet()) {
+                    UUID uuid = entry.getKey();
+                    BattlePassPlayer bpPlayer = entry.getValue();
+                    String path = uuid.toString();
+                    currentData.set(path + ".name", bpPlayer.getName());
+                    currentData.set(path + ".level", bpPlayer.getLevel());
+                    currentData.set(path + ".exp", bpPlayer.getExp());
+                    currentData.set(path + ".claimedRewards", bpPlayer.getClaimedRewards());
+                    currentData.set(path + ".completedMissions", bpPlayer.getCompletedMissions());
+                }
+
+                try {
+                    currentData.save(dataFile);
+                    plugin.getLogger().info("Successfully saved all player data.");
+                } catch (IOException e) {
+                    plugin.getLogger().log(Level.SEVERE, "Could not save all player data to players.yml!", e);
+                }
+            }
+        });
     }
 
     public BattlePassPlayer getBattlePassPlayer(UUID uuid) {
         return playerData.get(uuid);
     }
 
-    public void addExp(UUID uuid, int amount) {
-        BattlePassPlayer bpPlayer = getBattlePassPlayer(uuid);
+    // --- New Methods ---
+
+    public int getLevel(Player player) {
+        BattlePassPlayer bpPlayer = getBattlePassPlayer(player.getUniqueId());
+        return (bpPlayer != null) ? bpPlayer.getLevel() : 1;
+    }
+
+    public int getXP(Player player) {
+        BattlePassPlayer bpPlayer = getBattlePassPlayer(player.getUniqueId());
+        return (bpPlayer != null) ? bpPlayer.getExp() : 0;
+    }
+
+    public int getXPNeeded(Player player) {
+        BattlePassPlayer bpPlayer = getBattlePassPlayer(player.getUniqueId());
+        if (bpPlayer == null || bpPlayer.getLevel() >= maxLevel) {
+            return 0; // No XP needed if not loaded or at max level
+        }
+        int required = bpPlayer.getLevel() * 100;
+        return Math.max(0, required - bpPlayer.getExp());
+    }
+
+    public void addXP(Player player, int amount) {
+        BattlePassPlayer bpPlayer = getBattlePassPlayer(player.getUniqueId());
         if (bpPlayer == null || bpPlayer.getLevel() >= maxLevel) {
             return; // Player not found or is at max level
         }
 
         bpPlayer.setExp(bpPlayer.getExp() + amount);
 
-        while (bpPlayer.getExp() >= expPerLevel && bpPlayer.getLevel() < maxLevel) {
-            bpPlayer.setExp(bpPlayer.getExp() - expPerLevel);
-            bpPlayer.setLevel(bpPlayer.getLevel() + 1);
+        // Check for level up
+        boolean leveledUp = false;
+        int xpNeededForNextLevel = bpPlayer.getLevel() * 100;
+        while (bpPlayer.getExp() >= xpNeededForNextLevel && bpPlayer.getLevel() < maxLevel) {
+            leveledUp = true;
+            int oldLevel = bpPlayer.getLevel();
+            bpPlayer.setExp(bpPlayer.getExp() - xpNeededForNextLevel);
+            bpPlayer.setLevel(oldLevel + 1);
 
-            plugin.getLogger().info("Player " + bpPlayer.getName() + " leveled up to level " + bpPlayer.getLevel() + "!");
-            dispatchReward(uuid, bpPlayer.getLevel());
+            // Run on main thread to send message and call event
+            final int newLevel = bpPlayer.getLevel();
+            plugin.getServer().getScheduler().runTask(plugin, () -> {
+                // Send message
+                String message = "&a&l[BattlePass] &fSelamat! Kamu naik ke Level &b" + newLevel + "&f!";
+                player.sendMessage(plugin.getMiniMessage().deserialize(message));
+
+                // Call event
+                PlayerBattlePassLevelUpEvent event = new PlayerBattlePassLevelUpEvent(player, oldLevel, newLevel);
+                plugin.getServer().getPluginManager().callEvent(event);
+
+                // Dispatch any rewards
+                dispatchReward(player.getUniqueId(), newLevel);
+            });
+
+            // Update xpNeeded for the new level
+            xpNeededForNextLevel = bpPlayer.getLevel() * 100;
         }
+
+        // Save progress, especially after leveling up
+        savePlayerData(player.getUniqueId(), true);
     }
 
     private void dispatchReward(UUID playerUuid, int level) {

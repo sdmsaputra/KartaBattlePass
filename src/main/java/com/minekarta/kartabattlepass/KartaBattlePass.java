@@ -119,4 +119,15 @@ public final class KartaBattlePass extends JavaPlugin {
     public BattlePassStorage getBattlePassStorage() {
         return battlePassStorage;
     }
+
+    /**
+     * Adds a specified amount of XP to a player.
+     * This will handle level-ups and data saving automatically.
+     *
+     * @param player The player to give XP to.
+     * @param amount The amount of XP to give.
+     */
+    public void addXP(Player player, int amount) {
+        this.battlePassStorage.addXP(player, amount);
+    }
 }
