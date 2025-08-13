@@ -2,10 +2,14 @@ package com.minekarta.kartabattlepass;
 
 import com.minekarta.kartabattlepass.command.KBPCommand;
 import com.minekarta.kartabattlepass.expansion.BattlePassExpansion;
+import com.minekarta.kartabattlepass.listener.PlayerListener;
+import com.minekarta.kartabattlepass.storage.BattlePassStorage;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.minimessage.MiniMessage;
 import org.bukkit.Bukkit;
+import org.bukkit.entity.Player;
 import org.bukkit.plugin.java.JavaPlugin;
+import org.bukkit.scheduler.BukkitRunnable;
 
 import java.io.File;
 
@@ -13,6 +17,7 @@ public final class KartaBattlePass extends JavaPlugin {
 
     private static KartaBattlePass instance;
     private MiniMessage miniMessage;
+    private BattlePassStorage battlePassStorage;
 
     @Override
     public void onEnable() {
@@ -23,17 +28,34 @@ public final class KartaBattlePass extends JavaPlugin {
         saveDefaultConfig();
         saveDefaultResource("messages.yml");
 
+        getLogger().info("Initializing storage...");
+        this.battlePassStorage = new BattlePassStorage(this);
+
         getLogger().info("Registering command...");
         getCommand("kbp").setExecutor(new KBPCommand(this));
 
+        getLogger().info("Registering listeners...");
+        getServer().getPluginManager().registerEvents(new PlayerListener(this.battlePassStorage), this);
+
         getLogger().info("Checking dependencies...");
         checkDependencies();
+
+        // Load data for any players already online (e.g., after a /reload)
+        for (Player player : Bukkit.getOnlinePlayers()) {
+            this.battlePassStorage.loadPlayerData(player);
+        }
+
+        startAutoSaveTask();
 
         getLogger().info("KartaBattlePass v" + getDescription().getVersion() + " has been enabled!");
     }
 
     @Override
     public void onDisable() {
+        getLogger().info("Saving all player data...");
+        if (this.battlePassStorage != null) {
+            this.battlePassStorage.saveAllPlayerData();
+        }
         getLogger().info("KartaBattlePass has been disabled.");
     }
 
@@ -76,11 +98,25 @@ public final class KartaBattlePass extends JavaPlugin {
         }
     }
 
+    private void startAutoSaveTask() {
+        new BukkitRunnable() {
+            @Override
+            public void run() {
+                getLogger().info("Auto-saving player data...");
+                battlePassStorage.saveAllPlayerData();
+            }
+        }.runTaskTimer(this, 20L * 60 * 5, 20L * 60 * 5); // Every 5 minutes
+    }
+
     public static KartaBattlePass getInstance() {
         return instance;
     }
 
     public MiniMessage getMiniMessage() {
         return miniMessage;
+    }
+
+    public BattlePassStorage getBattlePassStorage() {
+        return battlePassStorage;
     }
 }
