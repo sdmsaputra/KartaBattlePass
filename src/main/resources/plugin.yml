@@ -15,3 +15,13 @@ commands:
     description: Main command for KartaBattlePass.
     usage: /<command>
     aliases: [battlepass, bp]
+permissions:
+  kartabattlepass.admin:
+    description: Allows reloading the config and other admin commands.
+    default: op
+  kartabattlepass.claim:
+    description: Allows claiming Battle Pass rewards.
+    default: true
+  kartabattlepass.premium:
+    description: Grants access to the premium reward track.
+    default: op

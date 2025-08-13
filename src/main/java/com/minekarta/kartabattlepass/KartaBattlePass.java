@@ -3,6 +3,8 @@ package com.minekarta.kartabattlepass;
 import com.minekarta.kartabattlepass.command.KBPCommand;
 import com.minekarta.kartabattlepass.expansion.BattlePassExpansion;
 import com.minekarta.kartabattlepass.listener.PlayerListener;
+import com.minekarta.kartabattlepass.service.ExperienceService;
+import com.minekarta.kartabattlepass.service.RewardService;
 import com.minekarta.kartabattlepass.storage.BattlePassStorage;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.minimessage.MiniMessage;
@@ -18,6 +20,8 @@ public final class KartaBattlePass extends JavaPlugin {
     private static KartaBattlePass instance;
     private MiniMessage miniMessage;
     private BattlePassStorage battlePassStorage;
+    private RewardService rewardService;
+    private ExperienceService experienceService;
 
     @Override
     public void onEnable() {
@@ -30,12 +34,14 @@ public final class KartaBattlePass extends JavaPlugin {
 
         getLogger().info("Initializing storage...");
         this.battlePassStorage = new BattlePassStorage(this);
+        this.rewardService = new RewardService(this);
+        this.experienceService = new ExperienceService(this);
 
         getLogger().info("Registering command...");
         getCommand("kbp").setExecutor(new KBPCommand(this));
 
         getLogger().info("Registering listeners...");
-        getServer().getPluginManager().registerEvents(new PlayerListener(this.battlePassStorage), this);
+        getServer().getPluginManager().registerEvents(new PlayerListener(this), this);
 
         getLogger().info("Checking dependencies...");
         checkDependencies();
@@ -120,6 +126,29 @@ public final class KartaBattlePass extends JavaPlugin {
         return battlePassStorage;
     }
 
+    public RewardService getRewardService() {
+        return rewardService;
+    }
+
+    public ExperienceService getExperienceService() {
+        return experienceService;
+    }
+
+    /**
+     * Reloads the plugin's configuration and re-initializes services.
+     */
+    public void reload() {
+        getLogger().info("Reloading configurations...");
+        reloadConfig();
+        saveDefaultConfig(); // Ensure config exists
+
+        // Re-initialize services that depend on the config
+        this.battlePassStorage.loadConfigValues();
+        this.experienceService = new ExperienceService(this);
+        this.rewardService = new RewardService(this);
+        getLogger().info("Services re-initialized.");
+    }
+
     /**
      * Adds a specified amount of XP to a player.
      * This will handle level-ups and data saving automatically.
@@ -127,7 +156,8 @@ public final class KartaBattlePass extends JavaPlugin {
      * @param player The player to give XP to.
      * @param amount The amount of XP to give.
      */
-    public void addXP(Player player, int amount) {
-        this.battlePassStorage.addXP(player, amount);
-    }
+    // This method will be moved to the Experience Service
+    // public void addXP(Player player, int amount) {
+    //    this.battlePassStorage.addXP(player, amount);
+    // }
 }
