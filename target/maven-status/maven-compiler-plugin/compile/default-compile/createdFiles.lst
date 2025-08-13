@@ -1,9 +1,13 @@
+com/minekarta/kartabattlepass/KartaBattlePass$1.class
 com/minekarta/kartabattlepass/KartaBattlePass.class
+com/minekarta/kartabattlepass/listener/PlayerListener.class
+com/minekarta/kartabattlepass/model/BattlePassPlayer.class
+com/minekarta/kartabattlepass/hooks/FancyNPCHook.class
+com/minekarta/kartabattlepass/storage/BattlePassStorage.class
+com/minekarta/kartabattlepass/service/QuestService.class
 com/minekarta/kartabattlepass/service/SeasonService.class
 com/minekarta/kartabattlepass/hooks/CitizensHook.class
 com/minekarta/kartabattlepass/gui/MainGUI.class
-com/minekarta/kartabattlepass/hooks/FancyNPCHook.class
-com/minekarta/kartabattlepass/service/QuestService.class
 com/minekarta/kartabattlepass/expansion/BattlePassExpansion.class
-com/minekarta/kartabattlepass/command/KBPCommand.class
 com/minekarta/kartabattlepass/hooks/VaultHook.class
+com/minekarta/kartabattlepass/command/KBPCommand.class

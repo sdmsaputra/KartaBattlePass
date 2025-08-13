@@ -1,4 +1,15 @@
 # KartaBattlePass Configuration
-# Placeholder for future settings
-settings:
-  some-setting: true
+
+# General BattlePass settings
+battlepass:
+  maxLevel: 50
+  expPerLevel: 1000
+
+# Rewards format: level: "command to execute"
+# You can use placeholders like %player% which will be replaced by the player's name.
+rewards:
+  1: "give %player% diamond 1"
+  5: "give %player% iron_ingot 10"
+  10: "eco give %player% 1000"
+  25: "say %player% has reached level 25!"
+  50: "give %player% netherite_ingot 1"
