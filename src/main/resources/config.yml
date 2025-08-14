@@ -48,6 +48,36 @@ xp-sources:
 rewards:
   auto-grant: false # Set to true to automatically claim rewards on level up.
 
+# GUI Configuration
+gui:
+  main-menu:
+    title: "KartaBattlePass"
+    size: 54
+    filler-item: "GRAY_STAINED_GLASS_PANE"
+    items:
+      rewards:
+        material: "EXPERIENCE_BOTTLE"
+        slot: 20
+        name: "<green>Rewards"
+        lore:
+          - "<gray>Click to view the Battle Pass rewards."
+      leaderboards:
+        material: "PLAYER_HEAD"
+        slot: 22
+        name: "<aqua>Leaderboards"
+        lore:
+          - "<gray>See who is at the top of the Battle Pass."
+      quests:
+        material: "WRITABLE_BOOK"
+        slot: 24
+        name: "<gold>Quests"
+        lore:
+          - "<gray>Check your daily and weekly quests."
+  rewards:
+    title: "Battle Pass Rewards"
+    size: 54
+    separator_item: "GRAY_STAINED_GLASS_PANE"
+
 # Example rewards - These are now moved to rewards.yml
 # rewards:
 #   1:

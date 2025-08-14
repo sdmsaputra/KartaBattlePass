@@ -11,23 +11,14 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 public class ItemReward extends Reward {
-    private final Material material;
-    private final int amount;
-    private final String name;
-    private final List<String> lore;
-    private final List<String> enchantments;
+    private final ItemStack displayItem;
 
-    public ItemReward(String track, Material material, int amount, String name, List<String> lore, List<String> enchantments) {
-        super(track);
-        this.material = material;
-        this.amount = amount;
-        this.name = name;
-        this.lore = lore;
-        this.enchantments = enchantments;
+    public ItemReward(String track, int level, String rewardId, Material material, int amount, String name, List<String> lore, List<String> enchantments) {
+        super(track, level, rewardId);
+        this.displayItem = createDisplayItem(material, amount, name, lore, enchantments);
     }
 
-    @Override
-    public void give(Player player) {
+    private ItemStack createDisplayItem(Material material, int amount, String name, List<String> lore, List<String> enchantments) {
         ItemStack item = new ItemStack(material, amount);
         ItemMeta meta = item.getItemMeta();
 
@@ -47,14 +38,28 @@ public class ItemReward extends Reward {
                 if (parts.length == 2) {
                     Enchantment enchantment = Enchantment.getByName(parts[0].toUpperCase());
                     if (enchantment != null) {
-                        int level = Integer.parseInt(parts[1]);
-                        meta.addEnchant(enchantment, level, true);
+                        try {
+                            int enchLevel = Integer.parseInt(parts[1]);
+                            meta.addEnchant(enchantment, enchLevel, true);
+                        } catch (NumberFormatException e) {
+                            // Ignore invalid enchantment level
+                        }
                     }
                 }
             }
         }
 
         item.setItemMeta(meta);
-        player.getInventory().addItem(item);
+        return item;
+    }
+
+    @Override
+    public void give(Player player) {
+        player.getInventory().addItem(this.displayItem.clone());
+    }
+
+    @Override
+    public ItemStack getDisplayItem() {
+        return this.displayItem.clone();
     }
 }

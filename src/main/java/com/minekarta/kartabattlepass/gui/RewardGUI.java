@@ -3,113 +3,157 @@ package com.minekarta.kartabattlepass.gui;
 import com.minekarta.kartabattlepass.KartaBattlePass;
 import com.minekarta.kartabattlepass.model.BattlePassPlayer;
 import com.minekarta.kartabattlepass.reward.Reward;
+import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.format.NamedTextColor;
+import net.kyori.adventure.text.minimessage.MiniMessage;
 import org.bukkit.Bukkit;
-import org.bukkit.ChatColor;
 import org.bukkit.Material;
+import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 
 import java.util.ArrayList;
-import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
+import java.util.stream.Collectors;
 
 public class RewardGUI {
-
     private final KartaBattlePass plugin;
     private final Player player;
     private final BattlePassPlayer bpp;
+    private final MiniMessage miniMessage;
+    private int page;
 
-    public RewardGUI(KartaBattlePass plugin, Player player) {
+    private static final int FREE_SLOTS_PER_PAGE = 18; // Rows 1-2 (slots 9-26)
+    private static final int PREMIUM_SLOTS_PER_PAGE = 18; // Rows 4-5 (slots 36-53)
+
+    public RewardGUI(KartaBattlePass plugin, Player player, int page) {
         this.plugin = plugin;
         this.player = player;
         this.bpp = plugin.getBattlePassStorage().getBattlePassPlayer(player.getUniqueId());
+        this.miniMessage = plugin.getMiniMessage();
+        this.page = page;
     }
 
     public void open() {
         if (bpp == null) {
-            player.sendMessage(ChatColor.RED + "Could not open reward GUI, your data is not loaded.");
+            player.sendMessage(Component.text("Your data is not loaded.", NamedTextColor.RED));
             return;
         }
 
-        Inventory gui = Bukkit.createInventory(null, 54, "Battle Pass Rewards");
+        ConfigurationSection guiConfig = plugin.getConfig().getConfigurationSection("gui.rewards");
+        String title = guiConfig.getString("title", "Battle Pass Rewards");
+        int size = guiConfig.getInt("size", 54);
 
-        // Example: Display rewards for levels 1-54
-        for (int level = 1; level <= 54; level++) {
-            List<Reward> rewards = plugin.getRewardService().getRewardsForLevel(level);
-            ItemStack displayItem;
+        Inventory gui = Bukkit.createInventory(player, size, miniMessage.deserialize(title + " - Page " + (page + 1)));
 
-            if (bpp.getLevel() >= level) {
-                // Player has reached this level
-                boolean allClaimed = areAllRewardsClaimed(level, rewards);
-                if (allClaimed) {
-                    displayItem = createDisplayItem(Material.CHEST,
-                            "&aLevel " + level + " (Claimed)",
-                            Collections.singletonList("&7You have claimed all rewards for this level."));
-                } else {
-                    displayItem = createDisplayItem(Material.ENDER_CHEST,
-                            "&eLevel " + level + " (Click to Claim)",
-                            generateRewardLore(rewards, level));
-                }
-            } else {
-                // Level not yet reached
-                displayItem = createDisplayItem(Material.BARRIER,
-                        "&cLevel " + level + " (Locked)",
-                        generateRewardLore(rewards, level));
-            }
-            gui.setItem(level - 1, displayItem);
-        }
+        populateGui(gui, guiConfig);
 
         player.openInventory(gui);
     }
 
-    private boolean areAllRewardsClaimed(int level, List<Reward> rewards) {
-        int rewardIndex = 0;
-        for (Reward reward : rewards) {
-            String rewardId = level + ":" + rewardIndex;
-            boolean isPremium = reward.isPremium();
-            boolean hasPremiumAccess = player.hasPermission("kartabattlepass.premium");
+    private void populateGui(Inventory gui, ConfigurationSection guiConfig) {
+        // Get and sort all rewards
+        List<Reward> allRewards = plugin.getRewardService().getAllRewards().stream()
+                .sorted(Comparator.comparingInt(Reward::getLevel))
+                .collect(Collectors.toList());
 
-            if (isPremium && !hasPremiumAccess) {
-                // Cannot claim premium, so don't count it as 'unclaimed' for this check
-                rewardIndex++;
-                continue;
-            }
+        List<Reward> freeRewards = allRewards.stream().filter(r -> !r.isPremium()).collect(Collectors.toList());
+        List<Reward> premiumRewards = allRewards.stream().filter(Reward::isPremium).collect(Collectors.toList());
 
-            if (!bpp.hasClaimedReward(level, rewardId)) {
-                return false; // Found at least one unclaimed reward
-            }
-            rewardIndex++;
+        int totalPages = Math.max(1, (int) Math.ceil((double) Math.max(freeRewards.size(), premiumRewards.size()) / FREE_SLOTS_PER_PAGE));
+        if (page >= totalPages) page = totalPages - 1;
+
+        // Separator
+        Material separatorMat = Material.matchMaterial(guiConfig.getString("separator_item", "GRAY_STAINED_GLASS_PANE"));
+        ItemStack separator = new ItemStack(separatorMat != null ? separatorMat : Material.GRAY_STAINED_GLASS_PANE);
+        ItemMeta meta = separator.getItemMeta();
+        meta.displayName(Component.text(" "));
+        separator.setItemMeta(meta);
+        for (int i = 27; i <= 35; i++) {
+            gui.setItem(i, separator);
         }
-        return true;
+
+        // Populate reward items for the current page
+        addRewardItems(gui, freeRewards, 9, FREE_SLOTS_PER_PAGE);
+        addRewardItems(gui, premiumRewards, 36, PREMIUM_SLOTS_PER_PAGE);
+
+        // Navigation
+        addNavigationControls(gui, totalPages);
     }
 
-    private List<String> generateRewardLore(List<Reward> rewards, int level) {
-        List<String> lore = new ArrayList<>();
-        lore.add("");
-        int rewardIndex = 0;
-        for (Reward reward : rewards) {
-            String rewardId = level + ":" + rewardIndex;
-            boolean isClaimed = bpp.hasClaimedReward(level, rewardId);
-            String prefix = isClaimed ? "&a✔ " : "&c✖ ";
-            lore.add(prefix + "&7Reward " + (rewardIndex + 1) + (reward.isPremium() ? " &6[Premium]" : ""));
-            rewardIndex++;
+    private void addRewardItems(Inventory gui, List<Reward> rewards, int startSlot, int slotsPerPage) {
+        int startIndex = page * slotsPerPage;
+        for (int i = 0; i < slotsPerPage; i++) {
+            int rewardIndex = startIndex + i;
+            if (rewardIndex < rewards.size()) {
+                Reward reward = rewards.get(rewardIndex);
+                gui.setItem(startSlot + i, createRewardItem(reward));
+            } else {
+                 // Fill empty reward slots with a different pane
+                ItemStack emptySlot = new ItemStack(Material.BLACK_STAINED_GLASS_PANE);
+                ItemMeta meta = emptySlot.getItemMeta();
+                meta.displayName(Component.text(" "));
+                emptySlot.setItemMeta(meta);
+                gui.setItem(startSlot + i, emptySlot);
+            }
         }
-        return lore;
     }
 
-    private ItemStack createDisplayItem(Material material, String name, List<String> lore) {
-        ItemStack item = new ItemStack(material);
+    private void addNavigationControls(Inventory gui, int totalPages) {
+        // Previous Page
+        if (page > 0) {
+            ItemStack prev = new ItemStack(Material.ARROW);
+            ItemMeta meta = prev.getItemMeta();
+            meta.displayName(miniMessage.deserialize("<yellow>Previous Page"));
+            prev.setItemMeta(meta);
+            gui.setItem(45, prev);
+        }
+
+        // Page Info & Back Button
+        ItemStack back = new ItemStack(Material.BARRIER);
+        ItemMeta backMeta = back.getItemMeta();
+        backMeta.displayName(miniMessage.deserialize("<red>Back to Main Menu"));
+        backMeta.lore(List.of(miniMessage.deserialize("<gray>Page " + (page + 1) + "/" + totalPages)));
+        back.setItemMeta(backMeta);
+        gui.setItem(49, back);
+
+        // Next Page
+        if (page < totalPages - 1) {
+            ItemStack next = new ItemStack(Material.ARROW);
+            ItemMeta meta = next.getItemMeta();
+            meta.displayName(miniMessage.deserialize("<yellow>Next Page"));
+            next.setItemMeta(meta);
+            gui.setItem(53, next);
+        }
+    }
+
+    private ItemStack createRewardItem(Reward reward) {
+        ItemStack item = reward.getDisplayItem().clone();
         ItemMeta meta = item.getItemMeta();
-        meta.setDisplayName(ChatColor.translateAlternateColorCodes('&', name));
+        List<Component> lore = meta.hasLore() ? new ArrayList<>(meta.lore()) : new ArrayList<>();
+        lore.add(Component.text(" "));
 
-        List<String> coloredLore = new ArrayList<>();
-        for (String line : lore) {
-            coloredLore.add(ChatColor.translateAlternateColorCodes('&', line));
+        boolean hasPremiumAccess = player.hasPermission("kartabattlepass.premium");
+        boolean isClaimed = bpp.hasClaimedReward(reward.getLevel(), reward.getRewardId());
+        boolean isUnlocked = bpp.getLevel() >= reward.getLevel();
+
+        if (isClaimed) {
+            lore.add(miniMessage.deserialize("<green>✔ Claimed</green>"));
+            meta.displayName(miniMessage.deserialize("<st>" + meta.getDisplayName() + "</st>"));
+        } else if (!isUnlocked) {
+            lore.add(miniMessage.deserialize("<red>✖ Locked</red>"));
+            lore.add(miniMessage.deserialize("<gray>Reach Level " + reward.getLevel() + " to unlock.</gray>"));
+        } else if (reward.isPremium() && !hasPremiumAccess) {
+            lore.add(miniMessage.deserialize("<red>✖ Premium Locked</red>"));
+            lore.add(miniMessage.deserialize("<gray>Requires the Premium Battle Pass.</gray>"));
+        } else {
+            lore.add(miniMessage.deserialize("<yellow>▶ Click to Claim!</yellow>"));
         }
-        meta.setLore(coloredLore);
 
+        meta.lore(lore);
         item.setItemMeta(meta);
         return item;
     }
