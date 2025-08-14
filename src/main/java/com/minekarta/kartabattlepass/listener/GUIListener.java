@@ -68,20 +68,29 @@ public class GUIListener implements Listener {
 
     private void handleLeaderboardMenuClick(InventoryClickEvent event, Player player, String title) {
         event.setCancelled(true);
-        ItemStack clickedItem = event.getCurrentItem();
-        if (clickedItem == null || clickedItem.getType() == Material.AIR) return;
 
-        ConfigurationSection leaderboardConfig = plugin.getConfig().getConfigurationSection("gui.leaderboard");
-        if (leaderboardConfig == null) return;
+        if (event.getClickedInventory() != player.getInventory()) {
+            ItemStack clickedItem = event.getCurrentItem();
+            if (clickedItem == null || clickedItem.getType() == Material.AIR) return;
 
-        int currentPage = parsePageFromTitle(title) - 1;
+            ConfigurationSection leaderboardConfig = plugin.getConfig().getConfigurationSection("gui.leaderboard");
+            if (leaderboardConfig == null) return;
 
-        if (event.getSlot() == leaderboardConfig.getInt("previous-page.slot", 45)) {
-            new LeaderboardGUI(plugin, player, currentPage - 1);
-        } else if (event.getSlot() == leaderboardConfig.getInt("next-page.slot", 53)) {
-            new LeaderboardGUI(plugin, player, currentPage + 1);
-        } else if (event.getSlot() == leaderboardConfig.getInt("back-button.slot", 49)) {
-            new MainGUI(plugin).open(player);
+            int currentPage = parsePageFromTitle(title) - 1;
+
+            int previousPageSlot = leaderboardConfig.getInt("previous-page.slot", 45);
+            int nextPageSlot = leaderboardConfig.getInt("next-page.slot", 53);
+            int backButtonSlot = leaderboardConfig.getInt("back-button.slot", 49);
+
+            if (event.getSlot() == previousPageSlot) {
+                if (currentPage > 0) {
+                    new LeaderboardGUI(plugin, player, currentPage - 1);
+                }
+            } else if (event.getSlot() == nextPageSlot) {
+                new LeaderboardGUI(plugin, player, currentPage + 1);
+            } else if (event.getSlot() == backButtonSlot) {
+                new MainGUI(plugin).open(player);
+            }
         }
     }
 

@@ -131,14 +131,33 @@ public class RewardGUI {
     }
 
     private ItemStack createRewardItem(Reward reward) {
-        ItemStack item = reward.getDisplayItem().clone();
-        ItemMeta meta = item.getItemMeta();
-        List<Component> lore = meta.hasLore() ? new ArrayList<>(meta.lore()) : new ArrayList<>();
-        lore.add(Component.text(" "));
-
-        boolean hasPremiumAccess = player.hasPermission("kartabattlepass.premium");
+        ItemStack item;
         boolean isClaimed = bpp.hasClaimedReward(reward.getLevel(), reward.getRewardId());
         boolean isUnlocked = bpp.getLevel() >= reward.getLevel();
+        boolean hasPremiumAccess = player.hasPermission("kartabattlepass.premium");
+
+        if (isClaimed) {
+            item = new ItemStack(Material.HOPPER_MINECART);
+        } else if (isUnlocked && (!reward.isPremium() || hasPremiumAccess)) {
+            item = new ItemStack(Material.CHEST_MINECART);
+        } else {
+            item = new ItemStack(Material.FURNACE_MINECART);
+        }
+
+        ItemMeta meta = item.getItemMeta();
+        ItemStack displayItem = reward.getDisplayItem();
+        if (displayItem.hasItemMeta()) {
+            ItemMeta displayMeta = displayItem.getItemMeta();
+            if (displayMeta.hasDisplayName()) {
+                meta.displayName(displayMeta.displayName());
+            }
+            if (displayMeta.hasLore()) {
+                meta.lore(displayMeta.lore());
+            }
+        }
+
+        List<Component> lore = meta.hasLore() ? new ArrayList<>(meta.lore()) : new ArrayList<>();
+        lore.add(Component.text(" "));
 
         if (isClaimed) {
             lore.add(miniMessage.deserialize("<green>✔ Claimed</green>"));

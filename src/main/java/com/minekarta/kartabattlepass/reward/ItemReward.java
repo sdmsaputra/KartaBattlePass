@@ -1,7 +1,9 @@
 package com.minekarta.kartabattlepass.reward;
 
 import com.minekarta.kartabattlepass.KartaBattlePass;
+import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.minimessage.MiniMessage;
+import net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer;
 import org.bukkit.Material;
 import org.bukkit.enchantments.Enchantment;
 import org.bukkit.entity.Player;
@@ -25,13 +27,14 @@ public class ItemReward extends Reward {
         MiniMessage miniMessage = KartaBattlePass.getInstance().getMiniMessage();
 
         if (name != null && !name.isEmpty()) {
-            meta.displayName(miniMessage.deserialize(name));
+            meta.displayName(LegacyComponentSerializer.builder().hexColors().useUnusualXRepeatedCharacterHexFormat().build().deserialize(name));
         }
 
         if (lore != null && !lore.isEmpty()) {
-            meta.lore(lore.stream()
-                    .map(miniMessage::deserialize)
-                    .collect(Collectors.toList()));
+            List<Component> loreComponents = lore.stream()
+                    .map(line -> LegacyComponentSerializer.builder().hexColors().useUnusualXRepeatedCharacterHexFormat().build().deserialize(line))
+                    .collect(Collectors.toList());
+            meta.lore(loreComponents);
         }
 
         if (enchantments != null && !enchantments.isEmpty()) {
