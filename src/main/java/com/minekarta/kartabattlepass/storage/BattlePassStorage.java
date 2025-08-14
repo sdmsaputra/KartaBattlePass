@@ -1,8 +1,8 @@
 package com.minekarta.kartabattlepass.storage;
 
 import com.minekarta.kartabattlepass.KartaBattlePass;
-import com.minekarta.kartabattlepass.event.PlayerBattlePassLevelUpEvent;
 import com.minekarta.kartabattlepass.model.BattlePassPlayer;
+import com.minekarta.kartabattlepass.quest.PlayerQuestProgress;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.configuration.file.YamlConfiguration;
@@ -76,12 +76,21 @@ public class BattlePassStorage {
                     }
                 }
 
-                List<String> completedMissions = section.getStringList("completedMissions");
+                Map<String, PlayerQuestProgress> questProgress = new ConcurrentHashMap<>();
+                if (section.isConfigurationSection("questProgress")) {
+                    ConfigurationSection questSection = section.getConfigurationSection("questProgress");
+                    for (String questId : questSection.getKeys(false)) {
+                        PlayerQuestProgress progress = new PlayerQuestProgress(questId);
+                        progress.setCurrentAmount(questSection.getInt(questId + ".currentAmount", 0));
+                        progress.setCompleted(questSection.getBoolean(questId + ".completed", false));
+                        questProgress.put(questId, progress);
+                    }
+                }
 
-                bpPlayer = new BattlePassPlayer(uuid, name, level, exp, claimedRewards, completedMissions);
+                bpPlayer = new BattlePassPlayer(uuid, name, level, exp, claimedRewards, questProgress);
             } else {
                 // Create new player data
-                bpPlayer = new BattlePassPlayer(uuid, player.getName(), 1, 0, new ConcurrentHashMap<>(), new ArrayList<>());
+                bpPlayer = new BattlePassPlayer(uuid, player.getName(), 1, 0, new ConcurrentHashMap<>(), new ConcurrentHashMap<>());
             }
 
             // Put the loaded data into the cache on the main thread
@@ -108,7 +117,15 @@ public class BattlePassStorage {
                 currentData.set(path + ".level", bpPlayer.getLevel());
                 currentData.set(path + ".exp", bpPlayer.getExp());
                 currentData.set(path + ".claimedRewards", bpPlayer.getClaimedRewards());
-                currentData.set(path + ".completedMissions", bpPlayer.getCompletedMissions());
+
+                // Save quest progress
+                for (Map.Entry<String, PlayerQuestProgress> entry : bpPlayer.getQuestProgress().entrySet()) {
+                    String questId = entry.getKey();
+                    PlayerQuestProgress progress = entry.getValue();
+                    String questPath = path + ".questProgress." + questId;
+                    currentData.set(questPath + ".currentAmount", progress.getCurrentAmount());
+                    currentData.set(questPath + ".completed", progress.isCompleted());
+                }
 
                 try {
                     currentData.save(dataFile);
@@ -150,7 +167,15 @@ public class BattlePassStorage {
                     currentData.set(path + ".level", bpPlayer.getLevel());
                     currentData.set(path + ".exp", bpPlayer.getExp());
                     currentData.set(path + ".claimedRewards", bpPlayer.getClaimedRewards());
-                    currentData.set(path + ".completedMissions", bpPlayer.getCompletedMissions());
+
+                    // Save quest progress for all players
+                    for (Map.Entry<String, PlayerQuestProgress> questEntry : bpPlayer.getQuestProgress().entrySet()) {
+                        String questId = questEntry.getKey();
+                        PlayerQuestProgress progress = questEntry.getValue();
+                        String questPath = path + ".questProgress." + questId;
+                        currentData.set(questPath + ".currentAmount", progress.getCurrentAmount());
+                        currentData.set(questPath + ".completed", progress.isCompleted());
+                    }
                 }
 
                 try {
@@ -163,22 +188,7 @@ public class BattlePassStorage {
         });
     }
 
-    public BattlePassPlayer getBattlePassPlayer(UUID uuid) {
-        return playerData.get(uuid);
+    public BattlePassPlayer getPlayerData(UUID uniqueId) {
+        return playerData.get(uniqueId);
     }
-
-    // --- New Methods ---
-
-    public int getLevel(Player player) {
-        BattlePassPlayer bpPlayer = getBattlePassPlayer(player.getUniqueId());
-        return (bpPlayer != null) ? bpPlayer.getLevel() : 1;
-    }
-
-    public int getXP(Player player) {
-        BattlePassPlayer bpPlayer = getBattlePassPlayer(player.getUniqueId());
-        return (bpPlayer != null) ? bpPlayer.getExp() : 0;
-    }
-
-    // All XP and level up logic will be moved to a dedicated ExperienceService.
-    // This class should only be responsible for storage.
 }

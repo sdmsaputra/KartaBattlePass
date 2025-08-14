@@ -45,7 +45,7 @@ public class BattlePassExpansion extends PlaceholderExpansion {
         }
 
         Player player = offlinePlayer.getPlayer();
-        BattlePassPlayer bpp = plugin.getBattlePassStorage().getBattlePassPlayer(player.getUniqueId());
+        BattlePassPlayer bpp = plugin.getBattlePassStorage().getPlayerData(player.getUniqueId());
         if (bpp == null) {
             return "";
         }

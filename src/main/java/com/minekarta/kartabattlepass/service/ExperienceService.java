@@ -23,7 +23,7 @@ public class ExperienceService {
     }
 
     public void addXP(Player player, int amount) {
-        BattlePassPlayer bpp = plugin.getBattlePassStorage().getBattlePassPlayer(player.getUniqueId());
+        BattlePassPlayer bpp = plugin.getBattlePassStorage().getPlayerData(player.getUniqueId());
         if (bpp == null || bpp.getLevel() >= maxLevel) {
             return; // Player data not loaded or max level reached
         }
@@ -59,7 +59,7 @@ public class ExperienceService {
     }
 
     public void setXP(Player player, int amount) {
-        BattlePassPlayer bpp = plugin.getBattlePassStorage().getBattlePassPlayer(player.getUniqueId());
+        BattlePassPlayer bpp = plugin.getBattlePassStorage().getPlayerData(player.getUniqueId());
         if (bpp == null) {
             return; // Player data not loaded
         }
@@ -70,7 +70,7 @@ public class ExperienceService {
     }
 
     public void setLevel(Player player, int level) {
-        BattlePassPlayer bpp = plugin.getBattlePassStorage().getBattlePassPlayer(player.getUniqueId());
+        BattlePassPlayer bpp = plugin.getBattlePassStorage().getPlayerData(player.getUniqueId());
         if (bpp == null) {
             return; // Player data not loaded
         }

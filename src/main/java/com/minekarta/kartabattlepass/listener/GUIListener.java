@@ -90,7 +90,7 @@ public class GUIListener implements Listener {
             Reward reward = getRewardFromSlot(clickedSlot, currentPage, isPremium);
             if (reward == null) return;
 
-            BattlePassPlayer bpp = plugin.getBattlePassStorage().getBattlePassPlayer(player.getUniqueId());
+            BattlePassPlayer bpp = plugin.getBattlePassStorage().getPlayerData(player.getUniqueId());
             boolean hasPremiumAccess = player.hasPermission("kartabattlepass.premium");
             boolean isClaimed = bpp.hasClaimedReward(reward.getLevel(), reward.getRewardId());
             boolean isUnlocked = bpp.getLevel() >= reward.getLevel();
