@@ -191,4 +191,56 @@ public class BattlePassStorage {
     public BattlePassPlayer getPlayerData(UUID uniqueId) {
         return playerData.get(uniqueId);
     }
+
+    public List<BattlePassPlayer> getAllPlayerData() {
+        List<BattlePassPlayer> allPlayers = new ArrayList<>();
+        FileConfiguration fileData = YamlConfiguration.loadConfiguration(dataFile);
+
+        ConfigurationSection playersSection = fileData.getConfigurationSection("");
+        if (playersSection == null) return allPlayers;
+
+        for (String uuidString : playersSection.getKeys(false)) {
+            try {
+                UUID uuid = UUID.fromString(uuidString);
+                ConfigurationSection section = playersSection.getConfigurationSection(uuidString);
+                if (section == null) continue;
+
+                // Check for online player data first to get the most up-to-date info
+                if (playerData.containsKey(uuid)) {
+                    allPlayers.add(playerData.get(uuid));
+                    continue;
+                }
+
+                String name = section.getString("name");
+                int level = section.getInt("level", 1);
+                int exp = section.getInt("exp", 0);
+
+                Map<Integer, List<String>> claimedRewards = new ConcurrentHashMap<>();
+                if (section.isConfigurationSection("claimedRewards")) {
+                    ConfigurationSection rewardsSection = section.getConfigurationSection("claimedRewards");
+                    for (String levelKey : rewardsSection.getKeys(false)) {
+                        claimedRewards.put(Integer.parseInt(levelKey), rewardsSection.getStringList(levelKey));
+                    }
+                }
+
+                Map<String, PlayerQuestProgress> questProgress = new ConcurrentHashMap<>();
+                if (section.isConfigurationSection("questProgress")) {
+                    ConfigurationSection questSection = section.getConfigurationSection("questProgress");
+                    for (String questId : questSection.getKeys(false)) {
+                        PlayerQuestProgress progress = new PlayerQuestProgress(questId);
+                        progress.setCurrentAmount(questSection.getInt(questId + ".currentAmount", 0));
+                        progress.setCompleted(questSection.getBoolean(questId + ".completed", false));
+                        questProgress.put(questId, progress);
+                    }
+                }
+
+                allPlayers.add(new BattlePassPlayer(uuid, name, level, exp, claimedRewards, questProgress));
+
+            } catch (IllegalArgumentException e) {
+                plugin.getLogger().warning("Skipping invalid UUID in players.yml: " + uuidString);
+            }
+        }
+
+        return allPlayers;
+    }
 }

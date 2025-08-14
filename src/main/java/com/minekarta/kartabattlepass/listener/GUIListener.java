@@ -1,6 +1,7 @@
 package com.minekarta.kartabattlepass.listener;
 
 import com.minekarta.kartabattlepass.KartaBattlePass;
+import com.minekarta.kartabattlepass.gui.LeaderboardGUI;
 import com.minekarta.kartabattlepass.gui.MainGUI;
 import com.minekarta.kartabattlepass.gui.RewardGUI;
 import com.minekarta.kartabattlepass.model.BattlePassPlayer;
@@ -35,11 +36,15 @@ public class GUIListener implements Listener {
 
         String mainMenuTitle = plugin.getConfig().getString("gui.main-menu.title", "KartaBattlePass");
         String rewardsMenuTitlePrefix = plugin.getConfig().getString("gui.rewards.title", "Battle Pass Rewards");
+        String leaderboardMenuTitlePrefix = plugin.getConfig().getString("gui.leaderboard.title", "Leaderboard").split(" - ")[0];
+
 
         if (plainTitle.equals(mainMenuTitle)) {
             handleMainMenuClick(event, player);
         } else if (plainTitle.startsWith(rewardsMenuTitlePrefix)) {
             handleRewardsMenuClick(event, player, plainTitle);
+        } else if (plainTitle.startsWith(leaderboardMenuTitlePrefix)) {
+            handleLeaderboardMenuClick(event, player, plainTitle);
         }
     }
 
@@ -53,9 +58,30 @@ public class GUIListener implements Listener {
 
         if (clickedSlot == itemsConfig.getInt("rewards.slot")) {
             new RewardGUI(plugin, player, 0).open();
-        } else if (clickedSlot == itemsConfig.getInt("leaderboards.slot") || clickedSlot == itemsConfig.getInt("quests.slot")) {
+        } else if (clickedSlot == itemsConfig.getInt("leaderboards.slot")) {
+            new LeaderboardGUI(plugin, player, 0);
+        } else if (clickedSlot == itemsConfig.getInt("quests.slot")) {
             player.sendMessage("This feature is not yet implemented.");
             player.closeInventory();
+        }
+    }
+
+    private void handleLeaderboardMenuClick(InventoryClickEvent event, Player player, String title) {
+        event.setCancelled(true);
+        ItemStack clickedItem = event.getCurrentItem();
+        if (clickedItem == null || clickedItem.getType() == Material.AIR) return;
+
+        ConfigurationSection leaderboardConfig = plugin.getConfig().getConfigurationSection("gui.leaderboard");
+        if (leaderboardConfig == null) return;
+
+        int currentPage = parsePageFromTitle(title) - 1;
+
+        if (event.getSlot() == leaderboardConfig.getInt("previous-page.slot", 45)) {
+            new LeaderboardGUI(plugin, player, currentPage - 1);
+        } else if (event.getSlot() == leaderboardConfig.getInt("next-page.slot", 53)) {
+            new LeaderboardGUI(plugin, player, currentPage + 1);
+        } else if (event.getSlot() == leaderboardConfig.getInt("back-button.slot", 49)) {
+            new MainGUI(plugin).open(player);
         }
     }
 
