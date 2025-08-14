@@ -36,15 +36,18 @@ public class RewardService {
                 int level = Integer.parseInt(levelKey);
                 List<Map<?, ?>> rewardMaps = rewardsSection.getMapList(levelKey);
                 List<Reward> levelRewards = new ArrayList<>();
+                int rewardIndex = 0;
 
                 for (Map<?, ?> rewardMap : rewardMaps) {
                     String type = (String) rewardMap.get("type");
                     if (type == null) continue;
 
-                    Reward reward = createRewardFromMap(rewardMap);
+                    String rewardId = level + ":" + rewardIndex;
+                    Reward reward = createRewardFromMap(rewardMap, level, rewardId);
                     if (reward != null) {
                         levelRewards.add(reward);
                     }
+                    rewardIndex++;
                 }
                 rewardsByLevel.put(level, levelRewards);
             } catch (NumberFormatException e) {
@@ -54,58 +57,64 @@ public class RewardService {
         plugin.getLogger().info("Loaded rewards for " + rewardsByLevel.size() + " levels.");
     }
 
-    private Reward createRewardFromMap(Map<?, ?> map) {
+    private Reward createRewardFromMap(Map<?, ?> map, int level, String rewardId) {
         String type = (String) map.get("type");
         String track = (String) map.get("track");
 
         switch (type.toLowerCase()) {
             case "item":
-                return createItemReward(map, track);
+                return createItemReward(map, track, level, rewardId);
             case "command":
-                return createCommandReward(map, track);
+                return createCommandReward(map, track, level, rewardId);
             case "money":
-                return createMoneyReward(map, track);
+                return createMoneyReward(map, track, level, rewardId);
             case "permission":
-                return createPermissionReward(map, track);
+                return createPermissionReward(map, track, level, rewardId);
             default:
                 plugin.getLogger().warning("Unknown reward type in rewards.yml: " + type);
                 return null;
         }
     }
 
-    private ItemReward createItemReward(Map<?, ?> map, String track) {
+    private ItemReward createItemReward(Map<?, ?> map, String track, int level, String rewardId) {
         try {
             Material material = Material.valueOf(((String) map.get("material")).toUpperCase());
             int amount = map.get("amount") != null ? (int) map.get("amount") : 1;
             String name = (String) map.get("name");
             List<String> lore = (List<String>) map.get("lore");
             List<String> enchantments = (List<String>) map.get("enchantments");
-            return new ItemReward(track, material, amount, name, lore, enchantments);
+            return new ItemReward(track, level, rewardId, material, amount, name, lore, enchantments);
         } catch (Exception e) {
             plugin.getLogger().severe("Failed to parse item reward: " + e.getMessage());
             return null;
         }
     }
 
-    private CommandReward createCommandReward(Map<?, ?> map, String track) {
+    private CommandReward createCommandReward(Map<?, ?> map, String track, int level, String rewardId) {
         String command = (String) map.get("command");
         String executor = (String) map.get("executor");
-        return new CommandReward(track, command, executor);
+        return new CommandReward(track, level, rewardId, command, executor);
     }
 
-    private MoneyReward createMoneyReward(Map<?, ?> map, String track) {
+    private MoneyReward createMoneyReward(Map<?, ?> map, String track, int level, String rewardId) {
         double amount = ((Number) map.get("amount")).doubleValue();
-        return new MoneyReward(track, amount);
+        return new MoneyReward(track, level, rewardId, amount);
     }
 
-    private PermissionReward createPermissionReward(Map<?, ?> map, String track) {
+    private PermissionReward createPermissionReward(Map<?, ?> map, String track, int level, String rewardId) {
         String permission = (String) map.get("permission");
         String duration = (String) map.get("duration");
-        return new PermissionReward(track, permission, duration);
+        return new PermissionReward(track, level, rewardId, permission, duration);
     }
 
     public List<Reward> getRewardsForLevel(int level) {
         return rewardsByLevel.getOrDefault(level, Collections.emptyList());
+    }
+
+    public List<Reward> getAllRewards() {
+        return rewardsByLevel.values().stream()
+                .flatMap(List::stream)
+                .collect(Collectors.toList());
     }
 
     public void claimLevelRewards(Player player, int level) {
@@ -127,26 +136,20 @@ public class RewardService {
         }
 
         boolean claimedSomething = false;
-        int rewardIndex = 0;
         for (Reward reward : rewards) {
-            String rewardId = level + ":" + rewardIndex;
-
             // Check if already claimed
-            if (bpp.hasClaimedReward(level, rewardId)) {
-                rewardIndex++;
+            if (bpp.hasClaimedReward(reward.getLevel(), reward.getRewardId())) {
                 continue;
             }
 
             // Check for premium track
             if (reward.isPremium() && !player.hasPermission("kartabattlepass.premium")) {
-                rewardIndex++;
                 continue;
             }
 
             reward.give(player);
-            bpp.addClaimedReward(level, rewardId);
+            bpp.addClaimedReward(reward.getLevel(), reward.getRewardId());
             claimedSomething = true;
-            rewardIndex++;
         }
 
         if (claimedSomething) {

@@ -1,6 +1,7 @@
 package com.minekarta.kartabattlepass.command;
 
 import com.minekarta.kartabattlepass.KartaBattlePass;
+import com.minekarta.kartabattlepass.gui.MainGUI;
 import com.minekarta.kartabattlepass.gui.RewardGUI;
 import com.minekarta.kartabattlepass.model.BattlePassPlayer;
 import net.kyori.adventure.text.Component;
@@ -31,7 +32,7 @@ public class KBPCommand implements TabExecutor {
         if (args.length == 0) {
             // By default, open the GUI for players, or show help for console
             if (sender instanceof Player) {
-                return openRewardsGui((Player) sender);
+                return openMainGui((Player) sender);
             } else {
                 return sendHelpMessage(sender);
             }
@@ -44,7 +45,8 @@ public class KBPCommand implements TabExecutor {
             case "open":
             case "rewards":
                 if (sender instanceof Player) {
-                    return openRewardsGui((Player) sender);
+                    // This now opens the main menu, which has a rewards button.
+                    return openMainGui((Player) sender);
                 } else {
                     sender.sendMessage("This command can only be used by players.");
                     return true;
@@ -115,12 +117,12 @@ public class KBPCommand implements TabExecutor {
         return true;
     }
 
-    private boolean openRewardsGui(Player player) {
+    private boolean openMainGui(Player player) {
         if (!player.hasPermission("kbattlepass.open")) {
             player.sendMessage(Component.text(NO_PERMISSION_MESSAGE));
             return true;
         }
-        new RewardGUI(plugin, player).open();
+        new MainGUI(plugin).open(player);
         return true;
     }
 
