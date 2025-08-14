@@ -142,7 +142,9 @@ public class RewardGUI {
 
         if (isClaimed) {
             lore.add(miniMessage.deserialize("<green>✔ Claimed</green>"));
-            meta.displayName(miniMessage.deserialize("<st>" + meta.getDisplayName() + "</st>"));
+            if (meta.hasDisplayName()) {
+                meta.displayName(meta.displayName().decoration(net.kyori.adventure.text.format.TextDecoration.STRIKETHROUGH, true));
+            }
         } else if (!isUnlocked) {
             lore.add(miniMessage.deserialize("<red>✖ Locked</red>"));
             lore.add(miniMessage.deserialize("<gray>Reach Level " + reward.getLevel() + " to unlock.</gray>"));

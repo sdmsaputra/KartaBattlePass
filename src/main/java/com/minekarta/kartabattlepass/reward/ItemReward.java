@@ -1,6 +1,7 @@
 package com.minekarta.kartabattlepass.reward;
 
-import org.bukkit.ChatColor;
+import com.minekarta.kartabattlepass.KartaBattlePass;
+import net.kyori.adventure.text.minimessage.MiniMessage;
 import org.bukkit.Material;
 import org.bukkit.enchantments.Enchantment;
 import org.bukkit.entity.Player;
@@ -21,14 +22,15 @@ public class ItemReward extends Reward {
     private ItemStack createDisplayItem(Material material, int amount, String name, List<String> lore, List<String> enchantments) {
         ItemStack item = new ItemStack(material, amount);
         ItemMeta meta = item.getItemMeta();
+        MiniMessage miniMessage = KartaBattlePass.getInstance().getMiniMessage();
 
         if (name != null && !name.isEmpty()) {
-            meta.setDisplayName(ChatColor.translateAlternateColorCodes('&', name));
+            meta.displayName(miniMessage.deserialize(name));
         }
 
         if (lore != null && !lore.isEmpty()) {
-            meta.setLore(lore.stream()
-                    .map(line -> ChatColor.translateAlternateColorCodes('&', line))
+            meta.lore(lore.stream()
+                    .map(miniMessage::deserialize)
                     .collect(Collectors.toList()));
         }
 
