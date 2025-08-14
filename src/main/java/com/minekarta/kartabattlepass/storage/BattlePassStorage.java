@@ -67,13 +67,21 @@ public class BattlePassStorage {
                 String name = section.getString("name", player.getName());
                 int level = section.getInt("level", 1);
                 int exp = section.getInt("exp", 0);
-                List<String> claimedRewards = section.getStringList("claimedRewards"); // Changed from getIntegerList
+
+                Map<Integer, List<String>> claimedRewards = new ConcurrentHashMap<>();
+                if (section.isConfigurationSection("claimedRewards")) {
+                    ConfigurationSection rewardsSection = section.getConfigurationSection("claimedRewards");
+                    for (String levelKey : rewardsSection.getKeys(false)) {
+                        claimedRewards.put(Integer.parseInt(levelKey), rewardsSection.getStringList(levelKey));
+                    }
+                }
+
                 List<String> completedMissions = section.getStringList("completedMissions");
 
                 bpPlayer = new BattlePassPlayer(uuid, name, level, exp, claimedRewards, completedMissions);
             } else {
                 // Create new player data
-                bpPlayer = new BattlePassPlayer(uuid, player.getName(), 1, 0, new ArrayList<>(), new ArrayList<>());
+                bpPlayer = new BattlePassPlayer(uuid, player.getName(), 1, 0, new ConcurrentHashMap<>(), new ArrayList<>());
             }
 
             // Put the loaded data into the cache on the main thread

@@ -1,7 +1,11 @@
 package com.minekarta.kartabattlepass;
 
 import com.minekarta.kartabattlepass.command.KBPCommand;
+import com.minekarta.kartabattlepass.command.KBPCommand;
+import com.minekarta.kartabattlepass.config.RewardConfig;
 import com.minekarta.kartabattlepass.expansion.BattlePassExpansion;
+import com.minekarta.kartabattlepass.hooks.VaultHook;
+import com.minekarta.kartabattlepass.listener.GUIListener;
 import com.minekarta.kartabattlepass.listener.PlayerListener;
 import com.minekarta.kartabattlepass.service.ExperienceService;
 import com.minekarta.kartabattlepass.service.RewardService;
@@ -22,6 +26,8 @@ public final class KartaBattlePass extends JavaPlugin {
     private BattlePassStorage battlePassStorage;
     private RewardService rewardService;
     private ExperienceService experienceService;
+    private VaultHook vaultHook;
+    private RewardConfig rewardConfig;
 
     @Override
     public void onEnable() {
@@ -31,6 +37,7 @@ public final class KartaBattlePass extends JavaPlugin {
         getLogger().info("Loading configurations...");
         saveDefaultConfig();
         saveDefaultResource("messages.yml");
+        this.rewardConfig = new RewardConfig(this);
 
         getLogger().info("Initializing storage...");
         this.battlePassStorage = new BattlePassStorage(this);
@@ -42,6 +49,7 @@ public final class KartaBattlePass extends JavaPlugin {
 
         getLogger().info("Registering listeners...");
         getServer().getPluginManager().registerEvents(new PlayerListener(this), this);
+        getServer().getPluginManager().registerEvents(new GUIListener(this), this);
 
         getLogger().info("Checking dependencies...");
         checkDependencies();
@@ -76,10 +84,9 @@ public final class KartaBattlePass extends JavaPlugin {
         }
 
         if (Bukkit.getPluginManager().getPlugin("Vault") != null) {
-            getLogger().info("Successfully hooked into Vault.");
-            // new VaultHook(); // Initialize hook
+            this.vaultHook = new VaultHook(this);
         } else {
-            getLogger().warning("Vault not found, some economy features might be disabled.");
+            getLogger().warning("Vault not found, economy and permission features will be disabled.");
         }
 
         if (Bukkit.getPluginManager().getPlugin("Citizens") != null) {
@@ -134,6 +141,14 @@ public final class KartaBattlePass extends JavaPlugin {
         return experienceService;
     }
 
+    public VaultHook getVaultHook() {
+        return vaultHook;
+    }
+
+    public RewardConfig getRewardConfig() {
+        return rewardConfig;
+    }
+
     /**
      * Reloads the plugin's configuration and re-initializes services.
      */
@@ -141,6 +156,7 @@ public final class KartaBattlePass extends JavaPlugin {
         getLogger().info("Reloading configurations...");
         reloadConfig();
         saveDefaultConfig(); // Ensure config exists
+        this.rewardConfig.reloadConfig();
 
         // Re-initialize services that depend on the config
         this.battlePassStorage.loadConfigValues();

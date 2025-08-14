@@ -1,0 +1,92 @@
+# --------------------------------------------------
+# KartaBattlePass Rewards Configuration
+# --------------------------------------------------
+#
+# This file defines all the rewards that players can earn by leveling up their Battle Pass.
+#
+# Each level is a top-level key, e.g., "level_1", "level_2".
+# Under each level, you define a list of rewards. Each reward is a map with a 'type'.
+#
+# Supported Reward Types:
+#
+# 1. Item
+#    - type: item
+#    - material: <Material_Name> (e.g., DIAMOND_SWORD, GOLDEN_APPLE)
+#    - amount: <number> (optional, defaults to 1)
+#    - name: "<display_name>" (optional, supports MiniMessage/legacy color codes)
+#    - lore:
+#      - "Line 1 of lore"
+#      - "Line 2 of lore"
+#    - enchantments: (optional)
+#      - "<enchantment_name>:<level>" (e.g., "sharpness:5", "unbreaking:3")
+#    - track: <free|premium> (optional, defaults to free)
+#
+# 2. Command
+#    - type: command
+#    - command: "<command_line>" (use %player% for player name)
+#    - executor: <console|player> (optional, defaults to console)
+#    - track: <free|premium> (optional, defaults to free)
+#
+# 3. Money (Requires Vault)
+#    - type: money
+#    - amount: <number>
+#    - track: <free|premium> (optional, defaults to free)
+#
+# 4. Permission (Requires Vault & a permission plugin like LuckPerms)
+#    - type: permission
+#    - permission: "<permission.node>"
+#    - duration: <time> (optional, e.g., "7d", "1h", "30m". If omitted, permission is permanent)
+#    - track: <free|premium> (optional, defaults to free)
+#
+# --- Example ---
+rewards:
+  1:
+    - type: item
+      material: IRON_SWORD
+      name: "&bRecruit's Blade"
+      track: free
+    - type: item
+      material: BREAD
+      amount: 16
+      track: free
+    - type: item
+      material: DIAMOND_SWORD
+      name: "&b&lPremium Blade"
+      enchantments:
+        - "sharpness:1"
+      track: premium
+  5:
+    - type: money
+      amount: 250
+      track: free
+    - type: command
+      command: "say %player% has reached level 5!"
+      track: premium
+  10:
+    - type: permission
+      permission: "essentials.fly"
+      duration: "1d"
+      track: premium
+  25:
+    - type: item
+      material: NETHERITE_INGOT
+      amount: 1
+      name: "&5Netherium Bar"
+      lore:
+        - "&7A rare and powerful ingot."
+      track: free
+    - type: money
+      amount: 1000
+      track: premium
+    - type: permission
+      permission: "kbp.vip"
+      track: premium
+  50:
+    - type: command
+      command: "broadcast %player% is a true legend, reaching level 50!"
+      executor: console
+      track: premium
+    - type: item
+      material: TOTEM_OF_UNDYING
+      amount: 2
+      track: premium

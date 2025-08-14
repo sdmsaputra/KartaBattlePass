@@ -1,6 +1,7 @@
 package com.minekarta.kartabattlepass.command;
 
 import com.minekarta.kartabattlepass.KartaBattlePass;
+import com.minekarta.kartabattlepass.gui.RewardGUI;
 import com.minekarta.kartabattlepass.model.BattlePassPlayer;
 import net.kyori.adventure.text.Component;
 import org.bukkit.Bukkit;
@@ -30,7 +31,7 @@ public class KBPCommand implements TabExecutor {
         if (args.length == 0) {
             // By default, open the GUI for players, or show help for console
             if (sender instanceof Player) {
-                return openGui((Player) sender);
+                return openRewardsGui((Player) sender);
             } else {
                 return sendHelpMessage(sender);
             }
@@ -41,15 +42,9 @@ public class KBPCommand implements TabExecutor {
             case "help":
                 return sendHelpMessage(sender);
             case "open":
+            case "rewards":
                 if (sender instanceof Player) {
-                    return openGui((Player) sender);
-                } else {
-                    sender.sendMessage("This command can only be used by players.");
-                    return true;
-                }
-            case "claim":
-                if (sender instanceof Player) {
-                    return claimReward((Player) sender, args);
+                    return openRewardsGui((Player) sender);
                 } else {
                     sender.sendMessage("This command can only be used by players.");
                     return true;
@@ -73,7 +68,7 @@ public class KBPCommand implements TabExecutor {
     @Override
     public List<String> onTabComplete(@NotNull CommandSender sender, @NotNull Command command, @NotNull String alias, @NotNull String[] args) {
         final List<String> completions = new ArrayList<>();
-        List<String> subcommands = new ArrayList<>(Arrays.asList("help", "open", "claim", "progress"));
+        List<String> subcommands = new ArrayList<>(Arrays.asList("help", "rewards", "progress"));
 
         if (sender.hasPermission("kbattlepass.admin")) {
             subcommands.addAll(Arrays.asList("reload", "setxp", "addxp", "setlevel"));
@@ -83,13 +78,6 @@ public class KBPCommand implements TabExecutor {
             StringUtil.copyPartialMatches(args[0], subcommands, completions);
         } else if (args.length == 2) {
             switch (args[0].toLowerCase()) {
-                case "claim":
-                    // Suggest tiers the player can claim
-                    if (sender instanceof Player player) {
-                        // This is complex, for now just suggest <tier>
-                        return List.of("<tier>");
-                    }
-                    break;
                 case "progress":
                 case "setxp":
                 case "addxp":
@@ -114,8 +102,7 @@ public class KBPCommand implements TabExecutor {
     private boolean sendHelpMessage(CommandSender sender) {
         sender.sendMessage(plugin.getMiniMessage().deserialize("<gold>--- KartaBattlePass Help ---"));
         sender.sendMessage(plugin.getMiniMessage().deserialize("<yellow>/kbp help <grey>- Shows this help message."));
-        sender.sendMessage(plugin.getMiniMessage().deserialize("<yellow>/kbp open <grey>- Opens the Battle Pass GUI."));
-        sender.sendMessage(plugin.getMiniMessage().deserialize("<yellow>/kbp claim <tier> <grey>- Claims a reward for a specific tier."));
+        sender.sendMessage(plugin.getMiniMessage().deserialize("<yellow>/kbp rewards <grey>- Opens the Battle Pass rewards GUI."));
         sender.sendMessage(plugin.getMiniMessage().deserialize("<yellow>/kbp progress [player] <grey>- Checks your or another player's progress."));
 
         if (sender.hasPermission("kbattlepass.admin")) {
@@ -128,38 +115,12 @@ public class KBPCommand implements TabExecutor {
         return true;
     }
 
-    private boolean openGui(Player player) {
+    private boolean openRewardsGui(Player player) {
         if (!player.hasPermission("kbattlepass.open")) {
             player.sendMessage(Component.text(NO_PERMISSION_MESSAGE));
             return true;
         }
-        // Placeholder for GUI opening logic
-        player.sendMessage(plugin.getMiniMessage().deserialize("<green>Opening Battle Pass GUI... (Not implemented yet)"));
-        return true;
-    }
-
-    private boolean claimReward(Player player, String[] args) {
-        if (!player.hasPermission("kbattlepass.claim")) {
-            player.sendMessage(Component.text(NO_PERMISSION_MESSAGE));
-            return true;
-        }
-        if (args.length < 2) {
-            player.sendMessage(plugin.getMiniMessage().deserialize("<red>Usage: /kbp claim <tier>"));
-            return true;
-        }
-        try {
-            int tier = Integer.parseInt(args[1]);
-            // Use the existing reward service
-            // The user wants a feedback message for failed claims.
-            // I will assume the claimReward service returns a boolean or throws an exception.
-            // For now, I will wrap it in a try-catch block and assume it messages the player on success.
-            plugin.getRewardService().claimReward(player, tier);
-        } catch (NumberFormatException e) {
-            player.sendMessage(plugin.getMiniMessage().deserialize("<red>Tier must be a number."));
-        } catch (Exception e) {
-            // Generic catch for "syarat belum terpenuhi"
-            player.sendMessage(plugin.getMiniMessage().deserialize("§cGagal klaim hadiah: syarat belum terpenuhi."));
-        }
+        new RewardGUI(plugin, player).open();
         return true;
     }
 
