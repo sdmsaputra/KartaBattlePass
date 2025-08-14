@@ -1,0 +1,77 @@
+# ----------------------------------------------------------------
+# KartaBattlePass Quests Configuration
+#
+# Define your quests here. Each quest has a unique ID.
+#
+# Quest Structure:
+# <quest-id>:
+#   type: The type of action to track. See below for a list of valid types.
+#   target: (Optional) The specific target of the action. E.g., 'ZOMBIE' for 'kill-mob' type, or 'DIAMOND_ORE' for 'block-break'.
+#   amount: The total number of actions required to complete the quest.
+#   rewards: A list of commands to be executed when the quest is completed. Use %player% for the player's name.
+#
+# ----------------------------------------------------------------
+# Valid Action Types:
+# - block-break
+# - block-place
+# - bucket-place
+# - chat
+# - chat-stripped
+# - right-click
+# - left-click
+# - right-click-block
+# - left-click-block
+# - consume
+# - craft
+# - damage-player
+# - enchant
+# - enchant-anvil
+# - enchant-all
+# - execute-command
+# - fish
+# - gain-experience
+# - item-break
+# - fly
+# - glide
+# - sneak
+# - sprint
+# - swim
+# - move
+# - kill-mob
+# - kill-player
+# - login
+# - milk
+# - playtime
+# - throw-projectile
+# - regenerate
+# - ride-mob
+# - shear
+# - smelt
+# - tame
+# - honey-extract
+# - honey-comb-extract
+# - breed
+# - brew
+# ----------------------------------------------------------------
+
+quests:
+  daily_miner:
+    type: "block-break"
+    target: "STONE"
+    amount: 64
+    rewards:
+      - "eco give %player% 100"
+      - "say %player% has completed the Daily Miner quest!"
+  daily_killer:
+    type: "kill-mob"
+    target: "ZOMBIE"
+    amount: 10
+    rewards:
+      - "minecraft:give %player% minecraft:iron_sword 1"
+  weekly_crafter:
+    type: "craft"
+    target: "DIAMOND_PICKAXE"
+    amount: 1
+    rewards:
+      - "eco give %player% 500"
+      - "xp give %player% 50"

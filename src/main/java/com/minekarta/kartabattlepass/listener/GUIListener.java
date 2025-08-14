@@ -1,6 +1,7 @@
 package com.minekarta.kartabattlepass.listener;
 
 import com.minekarta.kartabattlepass.KartaBattlePass;
+import com.minekarta.kartabattlepass.gui.LeaderboardGUI;
 import com.minekarta.kartabattlepass.gui.MainGUI;
 import com.minekarta.kartabattlepass.gui.RewardGUI;
 import com.minekarta.kartabattlepass.model.BattlePassPlayer;
@@ -35,11 +36,14 @@ public class GUIListener implements Listener {
 
         String mainMenuTitle = plugin.getConfig().getString("gui.main-menu.title", "KartaBattlePass");
         String rewardsMenuTitlePrefix = plugin.getConfig().getString("gui.rewards.title", "Battle Pass Rewards");
+        String leaderboardMenuTitlePrefix = "Leaderboard"; // This is hardcoded in LeaderboardGUI for now
 
         if (plainTitle.equals(mainMenuTitle)) {
             handleMainMenuClick(event, player);
         } else if (plainTitle.startsWith(rewardsMenuTitlePrefix)) {
             handleRewardsMenuClick(event, player, plainTitle);
+        } else if (plainTitle.startsWith(leaderboardMenuTitlePrefix)) {
+            handleLeaderboardMenuClick(event, player, plainTitle);
         }
     }
 
@@ -53,9 +57,25 @@ public class GUIListener implements Listener {
 
         if (clickedSlot == itemsConfig.getInt("rewards.slot")) {
             new RewardGUI(plugin, player, 0).open();
-        } else if (clickedSlot == itemsConfig.getInt("leaderboards.slot") || clickedSlot == itemsConfig.getInt("quests.slot")) {
+        } else if (clickedSlot == itemsConfig.getInt("leaderboards.slot")) {
+            plugin.getLeaderboardService().updateLeaderboard(); // Update leaderboard before opening
+            new LeaderboardGUI(plugin, player, 0).open();
+        } else if (clickedSlot == itemsConfig.getInt("quests.slot")) {
             player.sendMessage("This feature is not yet implemented.");
             player.closeInventory();
+        }
+    }
+
+    private void handleLeaderboardMenuClick(InventoryClickEvent event, Player player, String title) {
+        event.setCancelled(true);
+        int currentPage = parsePageFromTitle(title) - 1;
+
+        if (event.getSlot() == 45) { // Previous Page
+            new LeaderboardGUI(plugin, player, currentPage - 1).open();
+        } else if (event.getSlot() == 53) { // Next Page
+            new LeaderboardGUI(plugin, player, currentPage + 1).open();
+        } else if (event.getSlot() == 49) { // Back button
+            new MainGUI(plugin).open(player);
         }
     }
 
@@ -90,7 +110,7 @@ public class GUIListener implements Listener {
             Reward reward = getRewardFromSlot(clickedSlot, currentPage, isPremium);
             if (reward == null) return;
 
-            BattlePassPlayer bpp = plugin.getBattlePassStorage().getBattlePassPlayer(player.getUniqueId());
+            BattlePassPlayer bpp = plugin.getBattlePassStorage().getPlayerData(player.getUniqueId());
             boolean hasPremiumAccess = player.hasPermission("kartabattlepass.premium");
             boolean isClaimed = bpp.hasClaimedReward(reward.getLevel(), reward.getRewardId());
             boolean isUnlocked = bpp.getLevel() >= reward.getLevel();
