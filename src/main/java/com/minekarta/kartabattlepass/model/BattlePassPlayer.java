@@ -1,7 +1,6 @@
 package com.minekarta.kartabattlepass.model;
 
-import java.util.List;
-import java.util.UUID;
+import java.util.*;
 
 public class BattlePassPlayer {
 
@@ -9,15 +8,15 @@ public class BattlePassPlayer {
     private String name;
     private int level;
     private int exp;
-    private List<String> claimedRewards;
+    private Map<Integer, List<String>> claimedRewards;
     private List<String> completedMissions;
 
-    public BattlePassPlayer(UUID uuid, String name, int level, int exp, List<String> claimedRewards, List<String> completedMissions) {
+    public BattlePassPlayer(UUID uuid, String name, int level, int exp, Map<Integer, List<String>> claimedRewards, List<String> completedMissions) {
         this.uuid = uuid;
         this.name = name;
         this.level = level;
         this.exp = exp;
-        this.claimedRewards = claimedRewards;
+        this.claimedRewards = claimedRewards != null ? claimedRewards : new HashMap<>();
         this.completedMissions = completedMissions;
     }
 
@@ -49,12 +48,20 @@ public class BattlePassPlayer {
         this.exp = exp;
     }
 
-    public List<String> getClaimedRewards() {
+    public Map<Integer, List<String>> getClaimedRewards() {
         return claimedRewards;
     }
 
-    public void setClaimedRewards(List<String> claimedRewards) {
+    public void setClaimedRewards(Map<Integer, List<String>> claimedRewards) {
         this.claimedRewards = claimedRewards;
+    }
+
+    public boolean hasClaimedReward(int level, String rewardId) {
+        return claimedRewards.getOrDefault(level, Collections.emptyList()).contains(rewardId);
+    }
+
+    public void addClaimedReward(int level, String rewardId) {
+        claimedRewards.computeIfAbsent(level, k -> new ArrayList<>()).add(rewardId);
     }
 
     public List<String> getCompletedMissions() {

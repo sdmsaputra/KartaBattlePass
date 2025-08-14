@@ -45,6 +45,13 @@ public class ExperienceService {
             // Send level up message
             player.sendMessage(ChatColor.GREEN + "Selamat! Kamu telah mencapai Battle Pass Level " + bpp.getLevel() + "!");
 
+            // Handle rewards
+            if (plugin.getConfig().getBoolean("rewards.auto-grant", false)) {
+                plugin.getRewardService().claimLevelRewards(player, bpp.getLevel());
+            } else {
+                player.sendMessage(ChatColor.GOLD + "You have new rewards to claim! Type /bp rewards.");
+            }
+
             xpForNextLevel = getXpForLevel(bpp.getLevel());
         }
 
