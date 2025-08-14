@@ -38,7 +38,7 @@ public final class KartaBattlePass extends JavaPlugin {
         this.experienceService = new ExperienceService(this);
 
         getLogger().info("Registering command...");
-        getCommand("kbp").setExecutor(new KBPCommand(this));
+        getCommand("kbattlepass").setExecutor(new KBPCommand(this));
 
         getLogger().info("Registering listeners...");
         getServer().getPluginManager().registerEvents(new PlayerListener(this), this);

@@ -11,7 +11,23 @@ softdepend:
   - Citizens
   - FancyNPC
 commands:
-  kbp:
+  kbattlepass:
     description: Main command for KartaBattlePass.
     usage: /<command>
-    aliases: [battlepass, bp]
+    aliases: [kbp, battlepass, bp]
+permissions:
+  kbattlepass.admin:
+    description: Grants access to all admin commands.
+    default: op
+  kbattlepass.open:
+    description: Permission to open the Battle Pass GUI.
+    default: true
+  kbattlepass.claim:
+    description: Permission to claim rewards.
+    default: true
+  kbattlepass.progress.others:
+    description: Permission to view other players' progress.
+    default: op
+  kartabattlepass.premium:
+    description: Grants access to the premium reward track.
+    default: op
