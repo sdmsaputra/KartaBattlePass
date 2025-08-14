@@ -77,6 +77,22 @@ gui:
     title: "Battle Pass Rewards"
     size: 54
     separator_item: "GRAY_STAINED_GLASS_PANE"
+  leaderboard:
+    title: "<gold>Leaderboard - Page <page>"
+    size: 54
+    filler-item: "BLACK_STAINED_GLASS_PANE"
+    previous-page:
+      material: "ARROW"
+      slot: 45
+      name: "<green>Previous Page"
+    next-page:
+      material: "ARROW"
+      slot: 53
+      name: "<green>Next Page"
+    back-button:
+      material: "BARRIER"
+      slot: 49
+      name: "<red>Back to Main Menu"
 
 # Example rewards - These are now moved to rewards.yml
 # rewards:

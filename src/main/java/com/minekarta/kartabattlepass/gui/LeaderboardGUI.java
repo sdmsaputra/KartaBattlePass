@@ -59,10 +59,10 @@ public class LeaderboardGUI {
 
         String titleTemplate = guiConfig.getString("title", "<gold>Leaderboard - Page <page>");
         int size = guiConfig.getInt("size", 54);
-        int playersPerPage = 27; // Example: 3 rows of 9
+        int playersPerPage = 45;
 
         int totalPages = Math.max(1, (int) Math.ceil((double) players.size() / playersPerPage));
-        int effectivePage = Math.min(page, 1); // Max 2 pages, so 0 and 1
+        int effectivePage = Math.max(0, Math.min(page, totalPages - 1));
 
         String title = titleTemplate.replace("<page>", String.valueOf(effectivePage + 1));
         this.inventory = Bukkit.createInventory(null, size, miniMessage.deserialize(title));
@@ -71,35 +71,25 @@ public class LeaderboardGUI {
     }
 
     private void initializeItems(ConfigurationSection guiConfig, List<BattlePassPlayer> players, int effectivePage, int totalPages) {
-        // Filler Item
-        Material fillerMat = Material.matchMaterial(guiConfig.getString("filler-item", "BLACK_STAINED_GLASS_PANE"));
-        ItemStack fillerItem = new ItemStack(fillerMat != null ? fillerMat : Material.BLACK_STAINED_GLASS_PANE);
-        ItemMeta fillerMeta = fillerItem.getItemMeta();
-        fillerMeta.displayName(Component.text(" "));
-        fillerItem.setItemMeta(fillerMeta);
-        for (int i = 0; i < inventory.getSize(); i++) {
-            inventory.setItem(i, fillerItem);
-        }
-
-        // Player Heads
-        int startIndex = effectivePage * 27;
-        for (int i = 0; i < 27; i++) {
-            int playerIndex = startIndex + i;
+        for (int i = 0; i < 45; i++) {
+            int playerIndex = effectivePage * 45 + i;
             if (playerIndex < players.size()) {
                 BattlePassPlayer bpp = players.get(playerIndex);
-                ItemStack playerHead = createPlayerHead(bpp, playerIndex + 1);
-                inventory.setItem(i + 9, playerHead); // Start from the second row
+                inventory.setItem(i, createPlayerHead(bpp, playerIndex + 1));
+            } else {
+                inventory.setItem(i, new ItemStack(Material.AIR));
             }
         }
 
-        // Navigation Items
         if (effectivePage > 0) {
-            inventory.setItem(guiConfig.getInt("previous-page.slot", 45), createNavItem("previous-page", guiConfig));
+            inventory.setItem(45, createNavItem("previous-page", guiConfig));
         }
-        if (effectivePage < totalPages - 1 && effectivePage < 1) { // Max 2 pages
-            inventory.setItem(guiConfig.getInt("next-page.slot", 53), createNavItem("next-page", guiConfig));
+
+        if (effectivePage < totalPages - 1) {
+            inventory.setItem(53, createNavItem("next-page", guiConfig));
         }
-        inventory.setItem(guiConfig.getInt("back-button.slot", 49), createNavItem("back-button", guiConfig));
+
+        inventory.setItem(49, createNavItem("back-button", guiConfig));
     }
 
     private ItemStack createPlayerHead(BattlePassPlayer bpp, int rank) {
