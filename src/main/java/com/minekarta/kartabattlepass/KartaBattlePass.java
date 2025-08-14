@@ -1,13 +1,15 @@
 package com.minekarta.kartabattlepass;
 
 import com.minekarta.kartabattlepass.command.KBPCommand;
-import com.minekarta.kartabattlepass.command.KBPCommand;
+import com.minekarta.kartabattlepass.config.QuestConfig;
 import com.minekarta.kartabattlepass.config.RewardConfig;
 import com.minekarta.kartabattlepass.expansion.BattlePassExpansion;
 import com.minekarta.kartabattlepass.hooks.VaultHook;
 import com.minekarta.kartabattlepass.listener.GUIListener;
 import com.minekarta.kartabattlepass.listener.PlayerListener;
+import com.minekarta.kartabattlepass.listener.QuestListener;
 import com.minekarta.kartabattlepass.service.ExperienceService;
+import com.minekarta.kartabattlepass.service.QuestService;
 import com.minekarta.kartabattlepass.service.RewardService;
 import com.minekarta.kartabattlepass.storage.BattlePassStorage;
 import net.kyori.adventure.text.Component;
@@ -28,6 +30,8 @@ public final class KartaBattlePass extends JavaPlugin {
     private ExperienceService experienceService;
     private VaultHook vaultHook;
     private RewardConfig rewardConfig;
+    private QuestConfig questConfig;
+    private QuestService questService;
 
     @Override
     public void onEnable() {
@@ -38,11 +42,16 @@ public final class KartaBattlePass extends JavaPlugin {
         saveDefaultConfig();
         saveDefaultResource("messages.yml");
         this.rewardConfig = new RewardConfig(this);
+        this.questConfig = new QuestConfig(this);
 
         getLogger().info("Initializing storage...");
         this.battlePassStorage = new BattlePassStorage(this);
+
+        getLogger().info("Initializing services...");
         this.rewardService = new RewardService(this);
         this.experienceService = new ExperienceService(this);
+        this.questService = new QuestService(this);
+
 
         getLogger().info("Registering command...");
         getCommand("kbattlepass").setExecutor(new KBPCommand(this));
@@ -50,6 +59,7 @@ public final class KartaBattlePass extends JavaPlugin {
         getLogger().info("Registering listeners...");
         getServer().getPluginManager().registerEvents(new PlayerListener(this), this);
         getServer().getPluginManager().registerEvents(new GUIListener(this), this);
+        getServer().getPluginManager().registerEvents(new QuestListener(this), this);
 
         getLogger().info("Checking dependencies...");
         checkDependencies();
@@ -60,6 +70,7 @@ public final class KartaBattlePass extends JavaPlugin {
         }
 
         startAutoSaveTask();
+        startPlaytimeTracker();
 
         getLogger().info("KartaBattlePass v" + getDescription().getVersion() + " has been enabled!");
     }
@@ -121,6 +132,18 @@ public final class KartaBattlePass extends JavaPlugin {
         }.runTaskTimer(this, 20L * 60 * 5, 20L * 60 * 5); // Every 5 minutes
     }
 
+    private void startPlaytimeTracker() {
+        new BukkitRunnable() {
+            @Override
+            public void run() {
+                if (questService == null) return;
+                for (Player player : Bukkit.getOnlinePlayers()) {
+                    questService.progressQuest(player, "playtime", null, 1);
+                }
+            }
+        }.runTaskTimerAsynchronously(this, 20L, 20L); // Every second
+    }
+
     public static KartaBattlePass getInstance() {
         return instance;
     }
@@ -147,6 +170,14 @@ public final class KartaBattlePass extends JavaPlugin {
 
     public RewardConfig getRewardConfig() {
         return rewardConfig;
+    }
+
+    public QuestConfig getQuestConfig() {
+        return questConfig;
+    }
+
+    public QuestService getQuestService() {
+        return questService;
     }
 
     /**

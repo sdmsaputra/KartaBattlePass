@@ -118,7 +118,7 @@ public class RewardService {
     }
 
     public void claimLevelRewards(Player player, int level) {
-        BattlePassPlayer bpp = plugin.getBattlePassStorage().getBattlePassPlayer(player.getUniqueId());
+        BattlePassPlayer bpp = plugin.getBattlePassStorage().getPlayerData(player.getUniqueId());
         if (bpp == null) {
             player.sendMessage(ChatColor.RED + "Your Battle Pass data was not found.");
             return;

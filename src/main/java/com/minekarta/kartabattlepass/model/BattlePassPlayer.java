@@ -1,5 +1,7 @@
 package com.minekarta.kartabattlepass.model;
 
+import com.minekarta.kartabattlepass.quest.PlayerQuestProgress;
+
 import java.util.*;
 
 public class BattlePassPlayer {
@@ -8,16 +10,16 @@ public class BattlePassPlayer {
     private String name;
     private int level;
     private int exp;
-    private Map<Integer, List<String>> claimedRewards;
-    private List<String> completedMissions;
+    private final Map<Integer, List<String>> claimedRewards;
+    private final Map<String, PlayerQuestProgress> questProgress;
 
-    public BattlePassPlayer(UUID uuid, String name, int level, int exp, Map<Integer, List<String>> claimedRewards, List<String> completedMissions) {
+    public BattlePassPlayer(UUID uuid, String name, int level, int exp, Map<Integer, List<String>> claimedRewards, Map<String, PlayerQuestProgress> questProgress) {
         this.uuid = uuid;
         this.name = name;
         this.level = level;
         this.exp = exp;
         this.claimedRewards = claimedRewards != null ? claimedRewards : new HashMap<>();
-        this.completedMissions = completedMissions;
+        this.questProgress = questProgress != null ? questProgress : new HashMap<>();
     }
 
     public UUID getUuid() {
@@ -52,10 +54,6 @@ public class BattlePassPlayer {
         return claimedRewards;
     }
 
-    public void setClaimedRewards(Map<Integer, List<String>> claimedRewards) {
-        this.claimedRewards = claimedRewards;
-    }
-
     public boolean hasClaimedReward(int level, String rewardId) {
         return claimedRewards.getOrDefault(level, Collections.emptyList()).contains(rewardId);
     }
@@ -64,11 +62,15 @@ public class BattlePassPlayer {
         claimedRewards.computeIfAbsent(level, k -> new ArrayList<>()).add(rewardId);
     }
 
-    public List<String> getCompletedMissions() {
-        return completedMissions;
+    public Map<String, PlayerQuestProgress> getQuestProgress() {
+        return questProgress;
     }
 
-    public void setCompletedMissions(List<String> completedMissions) {
-        this.completedMissions = completedMissions;
+    public PlayerQuestProgress getQuestProgress(String questId) {
+        return questProgress.get(questId);
+    }
+
+    public void addQuestProgress(PlayerQuestProgress progress) {
+        this.questProgress.put(progress.getQuestId(), progress);
     }
 }

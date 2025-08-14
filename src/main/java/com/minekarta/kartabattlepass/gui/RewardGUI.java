@@ -32,7 +32,7 @@ public class RewardGUI {
     public RewardGUI(KartaBattlePass plugin, Player player, int page) {
         this.plugin = plugin;
         this.player = player;
-        this.bpp = plugin.getBattlePassStorage().getBattlePassPlayer(player.getUniqueId());
+        this.bpp = plugin.getBattlePassStorage().getPlayerData(player.getUniqueId());
         this.miniMessage = plugin.getMiniMessage();
         this.page = page;
     }
