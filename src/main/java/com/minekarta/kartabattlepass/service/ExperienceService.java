@@ -50,4 +50,42 @@ public class ExperienceService {
 
         plugin.getBattlePassStorage().savePlayerData(player.getUniqueId(), true);
     }
+
+    public void setXP(Player player, int amount) {
+        BattlePassPlayer bpp = plugin.getBattlePassStorage().getBattlePassPlayer(player.getUniqueId());
+        if (bpp == null) {
+            return; // Player data not loaded
+        }
+        bpp.setExp(amount);
+        // No level-up check on setXP, as it's for setting an exact value.
+        // This can be changed if needed.
+        plugin.getBattlePassStorage().savePlayerData(player.getUniqueId(), true);
+    }
+
+    public void setLevel(Player player, int level) {
+        BattlePassPlayer bpp = plugin.getBattlePassStorage().getBattlePassPlayer(player.getUniqueId());
+        if (bpp == null) {
+            return; // Player data not loaded
+        }
+        if (level > maxLevel) {
+            level = maxLevel;
+        }
+        if (level < 0) {
+            level = 0;
+        }
+
+        int oldLevel = bpp.getLevel();
+        bpp.setLevel(level);
+        bpp.setExp(0); // Reset XP to 0 when level is set manually
+
+        // Fire level up events if the level increased
+        if (bpp.getLevel() > oldLevel) {
+            for (int i = oldLevel + 1; i <= bpp.getLevel(); i++) {
+                PlayerBattlePassLevelUpEvent event = new PlayerBattlePassLevelUpEvent(player, i - 1, i);
+                plugin.getServer().getPluginManager().callEvent(event);
+            }
+        }
+
+        plugin.getBattlePassStorage().savePlayerData(player.getUniqueId(), true);
+    }
 }

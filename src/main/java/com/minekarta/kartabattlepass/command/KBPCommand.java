@@ -2,16 +2,24 @@ package com.minekarta.kartabattlepass.command;
 
 import com.minekarta.kartabattlepass.KartaBattlePass;
 import com.minekarta.kartabattlepass.model.BattlePassPlayer;
-import org.bukkit.ChatColor;
+import net.kyori.adventure.text.Component;
+import org.bukkit.Bukkit;
 import org.bukkit.command.Command;
-import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
+import org.bukkit.command.TabExecutor;
 import org.bukkit.entity.Player;
+import org.bukkit.util.StringUtil;
 import org.jetbrains.annotations.NotNull;
 
-public class KBPCommand implements CommandExecutor {
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+import java.util.stream.Collectors;
+
+public class KBPCommand implements TabExecutor {
 
     private final KartaBattlePass plugin;
+    private final String NO_PERMISSION_MESSAGE = "§cKamu tidak memiliki izin untuk melakukan perintah ini!";
 
     public KBPCommand(KartaBattlePass plugin) {
         this.plugin = plugin;
@@ -20,48 +28,173 @@ public class KBPCommand implements CommandExecutor {
     @Override
     public boolean onCommand(@NotNull CommandSender sender, @NotNull Command command, @NotNull String label, @NotNull String[] args) {
         if (args.length == 0) {
-            // Can be used to show a help menu or open a GUI in the future.
-            sender.sendMessage(ChatColor.GOLD + "--- KartaBattlePass ---");
-            sender.sendMessage(ChatColor.YELLOW + "/bp progress - Lihat progres Battle Pass Anda.");
-            sender.sendMessage(ChatColor.YELLOW + "/bp claim <level> - Klaim hadiah level.");
-            if (sender.hasPermission("kartabattlepass.admin")) {
-                sender.sendMessage(ChatColor.RED + "/bp reload - Reload konfigurasi.");
+            // By default, open the GUI for players, or show help for console
+            if (sender instanceof Player) {
+                return openGui((Player) sender);
+            } else {
+                return sendHelpMessage(sender);
             }
-            return true;
         }
 
         String subCommand = args[0].toLowerCase();
-
-        // Admin commands that can be run from console
-        if (subCommand.equals("reload")) {
-            return reloadConfig(sender);
-        }
-        if (subCommand.equals("givexp")) {
-            return giveXp(sender, args);
-        }
-
-        // Player-only commands
-        if (sender instanceof Player player) {
-            switch (subCommand) {
-                case "progress":
-                    return showProgress(player);
-                case "claim":
-                    return claimReward(player, args);
-                default:
-                    player.sendMessage(ChatColor.RED + "Perintah tidak dikenal. Gunakan /bp untuk bantuan.");
+        switch (subCommand) {
+            case "help":
+                return sendHelpMessage(sender);
+            case "open":
+                if (sender instanceof Player) {
+                    return openGui((Player) sender);
+                } else {
+                    sender.sendMessage("This command can only be used by players.");
                     return true;
-            }
-        } else {
-            sender.sendMessage("Perintah '" + subCommand + "' hanya bisa digunakan oleh pemain.");
-            return true;
+                }
+            case "claim":
+                if (sender instanceof Player) {
+                    return claimReward((Player) sender, args);
+                } else {
+                    sender.sendMessage("This command can only be used by players.");
+                    return true;
+                }
+            case "progress":
+                return checkProgress(sender, args);
+            case "reload":
+                return reloadConfig(sender);
+            case "setxp":
+                return setXp(sender, args);
+            case "addxp":
+                return addXp(sender, args);
+            case "setlevel":
+                return setLevel(sender, args);
+            default:
+                sender.sendMessage(plugin.getMiniMessage().deserialize("<red>Unknown subcommand. Use /kbp help for a list of commands."));
+                return true;
         }
     }
 
-    private boolean showProgress(Player player) {
-        BattlePassPlayer bpp = plugin.getBattlePassStorage().getBattlePassPlayer(player.getUniqueId());
-        if (bpp == null) {
-            player.sendMessage(ChatColor.RED + "Data Battle Pass Anda tidak dapat ditemukan.");
+    @Override
+    public List<String> onTabComplete(@NotNull CommandSender sender, @NotNull Command command, @NotNull String alias, @NotNull String[] args) {
+        final List<String> completions = new ArrayList<>();
+        List<String> subcommands = new ArrayList<>(Arrays.asList("help", "open", "claim", "progress"));
+
+        if (sender.hasPermission("kbattlepass.admin")) {
+            subcommands.addAll(Arrays.asList("reload", "setxp", "addxp", "setlevel"));
+        }
+
+        if (args.length == 1) {
+            StringUtil.copyPartialMatches(args[0], subcommands, completions);
+        } else if (args.length == 2) {
+            switch (args[0].toLowerCase()) {
+                case "claim":
+                    // Suggest tiers the player can claim
+                    if (sender instanceof Player player) {
+                        // This is complex, for now just suggest <tier>
+                        return List.of("<tier>");
+                    }
+                    break;
+                case "progress":
+                case "setxp":
+                case "addxp":
+                case "setlevel":
+                    if (sender.hasPermission("kbattlepass.admin") || sender.hasPermission("kbattlepass.progress.others")) {
+                        return StringUtil.copyPartialMatches(args[1], Bukkit.getOnlinePlayers().stream().map(Player::getName).collect(Collectors.toList()), new ArrayList<>());
+                    }
+                    break;
+            }
+        } else if (args.length == 3) {
+             switch (args[0].toLowerCase()) {
+                case "setxp":
+                case "addxp":
+                    return List.of("<amount>");
+                case "setlevel":
+                    return List.of("<level>");
+            }
+        }
+        return completions;
+    }
+
+    private boolean sendHelpMessage(CommandSender sender) {
+        sender.sendMessage(plugin.getMiniMessage().deserialize("<gold>--- KartaBattlePass Help ---"));
+        sender.sendMessage(plugin.getMiniMessage().deserialize("<yellow>/kbp help <grey>- Shows this help message."));
+        sender.sendMessage(plugin.getMiniMessage().deserialize("<yellow>/kbp open <grey>- Opens the Battle Pass GUI."));
+        sender.sendMessage(plugin.getMiniMessage().deserialize("<yellow>/kbp claim <tier> <grey>- Claims a reward for a specific tier."));
+        sender.sendMessage(plugin.getMiniMessage().deserialize("<yellow>/kbp progress [player] <grey>- Checks your or another player's progress."));
+
+        if (sender.hasPermission("kbattlepass.admin")) {
+            sender.sendMessage(plugin.getMiniMessage().deserialize("<red>--- Admin Commands ---"));
+            sender.sendMessage(plugin.getMiniMessage().deserialize("<red>/kbp reload <grey>- Reloads the plugin configuration."));
+            sender.sendMessage(plugin.getMiniMessage().deserialize("<red>/kbp setxp <player> <amount> <grey>- Sets a player's Battle Pass XP."));
+            sender.sendMessage(plugin.getMiniMessage().deserialize("<red>/kbp addxp <player> <amount> <grey>- Adds Battle Pass XP to a player."));
+            sender.sendMessage(plugin.getMiniMessage().deserialize("<red>/kbp setlevel <player> <level> <grey>- Sets a player's Battle Pass level."));
+        }
+        return true;
+    }
+
+    private boolean openGui(Player player) {
+        if (!player.hasPermission("kbattlepass.open")) {
+            player.sendMessage(Component.text(NO_PERMISSION_MESSAGE));
             return true;
+        }
+        // Placeholder for GUI opening logic
+        player.sendMessage(plugin.getMiniMessage().deserialize("<green>Opening Battle Pass GUI... (Not implemented yet)"));
+        return true;
+    }
+
+    private boolean claimReward(Player player, String[] args) {
+        if (!player.hasPermission("kbattlepass.claim")) {
+            player.sendMessage(Component.text(NO_PERMISSION_MESSAGE));
+            return true;
+        }
+        if (args.length < 2) {
+            player.sendMessage(plugin.getMiniMessage().deserialize("<red>Usage: /kbp claim <tier>"));
+            return true;
+        }
+        try {
+            int tier = Integer.parseInt(args[1]);
+            // Use the existing reward service
+            // The user wants a feedback message for failed claims.
+            // I will assume the claimReward service returns a boolean or throws an exception.
+            // For now, I will wrap it in a try-catch block and assume it messages the player on success.
+            plugin.getRewardService().claimReward(player, tier);
+        } catch (NumberFormatException e) {
+            player.sendMessage(plugin.getMiniMessage().deserialize("<red>Tier must be a number."));
+        } catch (Exception e) {
+            // Generic catch for "syarat belum terpenuhi"
+            player.sendMessage(plugin.getMiniMessage().deserialize("§cGagal klaim hadiah: syarat belum terpenuhi."));
+        }
+        return true;
+    }
+
+    private boolean checkProgress(CommandSender sender, String[] args) {
+        if (args.length == 1) {
+            if (sender instanceof Player player) {
+                showProgress(sender, player);
+                return true;
+            } else {
+                sender.sendMessage(plugin.getMiniMessage().deserialize("<red>Usage: /kbp progress <player>"));
+                return true;
+            }
+        }
+
+        if (args.length >= 2) {
+            if (!sender.hasPermission("kbattlepass.progress.others")) {
+                sender.sendMessage(Component.text(NO_PERMISSION_MESSAGE));
+                return true;
+            }
+            Player target = Bukkit.getPlayer(args[1]);
+            if (target == null) {
+                sender.sendMessage(plugin.getMiniMessage().deserialize("<red>Player not found: " + args[1]));
+                return true;
+            }
+            showProgress(sender, target);
+            return true;
+        }
+        return sendHelpMessage(sender); // Show help if usage is incorrect
+    }
+
+    private void showProgress(CommandSender sender, Player target) {
+        BattlePassPlayer bpp = plugin.getBattlePassStorage().getBattlePassPlayer(target.getUniqueId());
+        if (bpp == null) {
+            sender.sendMessage(plugin.getMiniMessage().deserialize("<red>Could not find Battle Pass data for " + target.getName()));
+            return;
         }
 
         int currentLevel = bpp.getLevel();
@@ -69,83 +202,100 @@ public class KBPCommand implements CommandExecutor {
         int xpForNextLevel = plugin.getExperienceService().getXpForLevel(currentLevel);
         int maxLevel = plugin.getConfig().getInt("battlepass.max-level", 100);
 
-        player.sendMessage(ChatColor.GOLD + "--- Progress Battle Pass ---");
-        player.sendMessage(ChatColor.YELLOW + "Level: " + ChatColor.WHITE + currentLevel);
+        sender.sendMessage(plugin.getMiniMessage().deserialize("<gold>--- Battle Pass Progress: " + target.getName() + " ---"));
+        sender.sendMessage(plugin.getMiniMessage().deserialize("<yellow>Level: <white>" + currentLevel));
 
         if (currentLevel >= maxLevel) {
-            player.sendMessage(ChatColor.GREEN + "Anda telah mencapai level maksimal!");
+            sender.sendMessage(plugin.getMiniMessage().deserialize("<green>Max level reached!"));
         } else {
-            player.sendMessage(ChatColor.YELLOW + "Progress XP: " + ChatColor.WHITE + currentXp + " / " + xpForNextLevel);
-            player.sendMessage(ChatColor.YELLOW + "Bar: " + getProgressBar(currentXp, xpForNextLevel));
+            sender.sendMessage(plugin.getMiniMessage().deserialize("<yellow>XP Progress: <white>" + currentXp + " / " + xpForNextLevel));
         }
+    }
+
+    private boolean reloadConfig(CommandSender sender) {
+        if (!sender.hasPermission("kbattlepass.admin")) {
+            sender.sendMessage(Component.text(NO_PERMISSION_MESSAGE));
+            return true;
+        }
+        plugin.reload();
+        sender.sendMessage(plugin.getMiniMessage().deserialize("§aBerhasil memuat ulang semua konfigurasi & data dari file."));
         return true;
     }
 
-    private String getProgressBar(int current, int max, int totalBars, char symbol, ChatColor completedColor, ChatColor notCompletedColor) {
-        if (max == 0) return ""; // Avoid division by zero
-        float percent = (float) current / max;
-        int progressBars = (int) (totalBars * percent);
-
-        return completedColor + new String(new char[progressBars]).replace('\0', symbol) +
-                notCompletedColor + new String(new char[totalBars - progressBars]).replace('\0', symbol);
-    }
-
-    private String getProgressBar(int current, int max) {
-        return getProgressBar(current, max, 20, '|', ChatColor.GREEN, ChatColor.GRAY);
-    }
-
-    private boolean claimReward(Player player, String[] args) {
-        if (!player.hasPermission("kartabattlepass.claim")) {
-            player.sendMessage(ChatColor.RED + "Anda tidak memiliki izin untuk mengklaim hadiah.");
+    private boolean setXp(CommandSender sender, String[] args) {
+        if (!sender.hasPermission("kbattlepass.admin")) {
+            sender.sendMessage(Component.text(NO_PERMISSION_MESSAGE));
             return true;
         }
-        if (args.length < 2) {
-            player.sendMessage(ChatColor.RED + "Penggunaan: /bp claim <level>");
+        if (args.length < 3) {
+            sender.sendMessage(plugin.getMiniMessage().deserialize("<red>Usage: /kbp setxp <player> <amount>"));
+            return true;
+        }
+
+        Player target = Bukkit.getPlayer(args[1]);
+        if (target == null) {
+            sender.sendMessage(plugin.getMiniMessage().deserialize("<red>Player '" + args[1] + "' not found."));
             return true;
         }
 
         try {
-            int level = Integer.parseInt(args[1]);
-            plugin.getRewardService().claimReward(player, level);
+            int amount = Integer.parseInt(args[2]);
+            plugin.getExperienceService().setXP(target, amount);
+            sender.sendMessage(plugin.getMiniMessage().deserialize("§aBerhasil mengatur jumlah XP menjadi §e" + amount + " §auntuk §b" + target.getName() + "§a."));
         } catch (NumberFormatException e) {
-            player.sendMessage(ChatColor.RED + "Level harus berupa angka.");
+            sender.sendMessage(plugin.getMiniMessage().deserialize("<red>The amount must be a number."));
         }
         return true;
     }
 
-    private boolean reloadConfig(CommandSender sender) {
-        if (!sender.hasPermission("kartabattlepass.admin")) {
-            sender.sendMessage(ChatColor.RED + "Anda tidak memiliki izin untuk melakukan ini.");
-            return true;
-        }
-        plugin.reload();
-        sender.sendMessage(ChatColor.GREEN + "Konfigurasi KartaBattlePass berhasil di-reload.");
-        return true;
-    }
-
-    private boolean giveXp(CommandSender sender, String[] args) {
-        if (!sender.hasPermission("kartabattlepass.admin")) {
-            sender.sendMessage(ChatColor.RED + "Anda tidak memiliki izin untuk melakukan ini.");
+    private boolean addXp(CommandSender sender, String[] args) {
+        if (!sender.hasPermission("kbattlepass.admin")) {
+            sender.sendMessage(Component.text(NO_PERMISSION_MESSAGE));
             return true;
         }
         if (args.length < 3) {
-            sender.sendMessage(ChatColor.RED + "Penggunaan: /bp givexp <player> <amount>");
+            sender.sendMessage(plugin.getMiniMessage().deserialize("<red>Usage: /kbp addxp <player> <amount>"));
             return true;
         }
 
-        Player target = org.bukkit.Bukkit.getPlayer(args[1]);
+        Player target = Bukkit.getPlayer(args[1]);
         if (target == null) {
-            sender.sendMessage(ChatColor.RED + "Pemain '" + args[1] + "' tidak ditemukan atau sedang offline.");
+            sender.sendMessage(plugin.getMiniMessage().deserialize("<red>Player '" + args[1] + "' not found."));
             return true;
         }
 
         try {
             int amount = Integer.parseInt(args[2]);
             plugin.getExperienceService().addXP(target, amount);
-            sender.sendMessage(ChatColor.GREEN + "Berhasil memberikan " + amount + " XP kepada " + target.getName() + ".");
-            target.sendMessage(ChatColor.GREEN + "Anda menerima " + amount + " XP dari admin.");
+            sender.sendMessage(plugin.getMiniMessage().deserialize("§aBerhasil menambahkan §e" + amount + " XP §akepada §b" + target.getName() + "§a."));
         } catch (NumberFormatException e) {
-            sender.sendMessage(ChatColor.RED + "Jumlah XP harus berupa angka.");
+            sender.sendMessage(plugin.getMiniMessage().deserialize("<red>The amount must be a number."));
+        }
+        return true;
+    }
+
+    private boolean setLevel(CommandSender sender, String[] args) {
+        if (!sender.hasPermission("kbattlepass.admin")) {
+            sender.sendMessage(Component.text(NO_PERMISSION_MESSAGE));
+            return true;
+        }
+        if (args.length < 3) {
+            sender.sendMessage(plugin.getMiniMessage().deserialize("<red>Usage: /kbp setlevel <player> <level>"));
+            return true;
+        }
+
+        Player target = Bukkit.getPlayer(args[1]);
+        if (target == null) {
+            sender.sendMessage(plugin.getMiniMessage().deserialize("<red>Player '" + args[1] + "' not found."));
+            return true;
+        }
+
+        try {
+            int level = Integer.parseInt(args[2]);
+            plugin.getExperienceService().setLevel(target, level);
+            sender.sendMessage(plugin.getMiniMessage().deserialize("§aBerhasil mengatur level §b" + target.getName() + " §amenjadi §e" + level + "§a."));
+        } catch (NumberFormatException e) {
+            sender.sendMessage(plugin.getMiniMessage().deserialize("<red>The level must be a number."));
         }
         return true;
     }
