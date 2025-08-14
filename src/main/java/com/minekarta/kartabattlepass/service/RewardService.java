@@ -2,84 +2,158 @@ package com.minekarta.kartabattlepass.service;
 
 import com.minekarta.kartabattlepass.KartaBattlePass;
 import com.minekarta.kartabattlepass.model.BattlePassPlayer;
-import org.bukkit.Bukkit;
+import com.minekarta.kartabattlepass.reward.*;
 import org.bukkit.ChatColor;
-import org.bukkit.OfflinePlayer;
-import org.bukkit.command.ConsoleCommandSender;
+import org.bukkit.Material;
 import org.bukkit.configuration.ConfigurationSection;
+import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.entity.Player;
 
-import java.util.List;
+import java.util.*;
+import java.util.stream.Collectors;
 
 public class RewardService {
 
     private final KartaBattlePass plugin;
+    private final Map<Integer, List<Reward>> rewardsByLevel = new HashMap<>();
 
     public RewardService(KartaBattlePass plugin) {
         this.plugin = plugin;
+        loadRewards();
     }
 
-    public void claimReward(Player player, int level) {
+    public void loadRewards() {
+        rewardsByLevel.clear();
+        FileConfiguration config = plugin.getRewardConfig().getConfig();
+        ConfigurationSection rewardsSection = config.getConfigurationSection("rewards");
+        if (rewardsSection == null) {
+            plugin.getLogger().warning("No 'rewards' section found in rewards.yml.");
+            return;
+        }
+
+        for (String levelKey : rewardsSection.getKeys(false)) {
+            try {
+                int level = Integer.parseInt(levelKey);
+                List<Map<?, ?>> rewardMaps = rewardsSection.getMapList(levelKey);
+                List<Reward> levelRewards = new ArrayList<>();
+
+                for (Map<?, ?> rewardMap : rewardMaps) {
+                    String type = (String) rewardMap.get("type");
+                    if (type == null) continue;
+
+                    Reward reward = createRewardFromMap(rewardMap);
+                    if (reward != null) {
+                        levelRewards.add(reward);
+                    }
+                }
+                rewardsByLevel.put(level, levelRewards);
+            } catch (NumberFormatException e) {
+                plugin.getLogger().warning("Invalid level format in rewards.yml: " + levelKey);
+            }
+        }
+        plugin.getLogger().info("Loaded rewards for " + rewardsByLevel.size() + " levels.");
+    }
+
+    private Reward createRewardFromMap(Map<?, ?> map) {
+        String type = (String) map.get("type");
+        String track = (String) map.get("track");
+
+        switch (type.toLowerCase()) {
+            case "item":
+                return createItemReward(map, track);
+            case "command":
+                return createCommandReward(map, track);
+            case "money":
+                return createMoneyReward(map, track);
+            case "permission":
+                return createPermissionReward(map, track);
+            default:
+                plugin.getLogger().warning("Unknown reward type in rewards.yml: " + type);
+                return null;
+        }
+    }
+
+    private ItemReward createItemReward(Map<?, ?> map, String track) {
+        try {
+            Material material = Material.valueOf(((String) map.get("material")).toUpperCase());
+            int amount = map.get("amount") != null ? (int) map.get("amount") : 1;
+            String name = (String) map.get("name");
+            List<String> lore = (List<String>) map.get("lore");
+            List<String> enchantments = (List<String>) map.get("enchantments");
+            return new ItemReward(track, material, amount, name, lore, enchantments);
+        } catch (Exception e) {
+            plugin.getLogger().severe("Failed to parse item reward: " + e.getMessage());
+            return null;
+        }
+    }
+
+    private CommandReward createCommandReward(Map<?, ?> map, String track) {
+        String command = (String) map.get("command");
+        String executor = (String) map.get("executor");
+        return new CommandReward(track, command, executor);
+    }
+
+    private MoneyReward createMoneyReward(Map<?, ?> map, String track) {
+        double amount = ((Number) map.get("amount")).doubleValue();
+        return new MoneyReward(track, amount);
+    }
+
+    private PermissionReward createPermissionReward(Map<?, ?> map, String track) {
+        String permission = (String) map.get("permission");
+        String duration = (String) map.get("duration");
+        return new PermissionReward(track, permission, duration);
+    }
+
+    public List<Reward> getRewardsForLevel(int level) {
+        return rewardsByLevel.getOrDefault(level, Collections.emptyList());
+    }
+
+    public void claimLevelRewards(Player player, int level) {
         BattlePassPlayer bpp = plugin.getBattlePassStorage().getBattlePassPlayer(player.getUniqueId());
         if (bpp == null) {
-            player.sendMessage(ChatColor.RED + "Data Battle Pass kamu tidak ditemukan.");
+            player.sendMessage(ChatColor.RED + "Your Battle Pass data was not found.");
             return;
         }
 
         if (bpp.getLevel() < level) {
-            player.sendMessage(ChatColor.RED + "Kamu belum mencapai level " + level + ".");
+            player.sendMessage(ChatColor.RED + "You have not reached level " + level + " yet.");
             return;
         }
 
-        ConfigurationSection rewardsSection = plugin.getConfig().getConfigurationSection("rewards." + level);
-        if (rewardsSection == null) {
-            player.sendMessage(ChatColor.RED + "Tidak ada hadiah yang dikonfigurasi untuk level " + level + ".");
+        List<Reward> rewards = getRewardsForLevel(level);
+        if (rewards.isEmpty()) {
+            player.sendMessage(ChatColor.RED + "No rewards are configured for level " + level + ".");
             return;
         }
 
         boolean claimedSomething = false;
+        int rewardIndex = 0;
+        for (Reward reward : rewards) {
+            String rewardId = level + ":" + rewardIndex;
 
-        // Claim Free Rewards
-        if (rewardsSection.isList("free")) {
-            String claimKey = level + ":free";
-            if (!bpp.getClaimedRewards().contains(claimKey)) {
-                List<String> commands = rewardsSection.getStringList("free");
-                executeCommands(player, commands);
-                bpp.getClaimedRewards().add(claimKey);
-                player.sendMessage(ChatColor.GREEN + "Kamu berhasil mengklaim hadiah gratis level " + level + "!");
-                claimedSomething = true;
+            // Check if already claimed
+            if (bpp.hasClaimedReward(level, rewardId)) {
+                rewardIndex++;
+                continue;
             }
-        }
 
-        // Claim Premium Rewards
-        if (rewardsSection.isList("premium")) {
-            if (player.hasPermission("kartabattlepass.premium")) {
-                String claimKey = level + ":premium";
-                if (!bpp.getClaimedRewards().contains(claimKey)) {
-                    List<String> commands = rewardsSection.getStringList("premium");
-                    executeCommands(player, commands);
-                    bpp.getClaimedRewards().add(claimKey);
-                    player.sendMessage(ChatColor.GOLD + "Kamu berhasil mengklaim hadiah premium level " + level + "!");
-                    claimedSomething = true;
-                }
-            } else {
-                // Optional: message if they could claim premium but don't have permission
-                 player.sendMessage(ChatColor.YELLOW + "Kamu tidak memiliki akses premium untuk mengklaim hadiah ini.");
+            // Check for premium track
+            if (reward.isPremium() && !player.hasPermission("kartabattlepass.premium")) {
+                rewardIndex++;
+                continue;
             }
+
+            reward.give(player);
+            bpp.addClaimedReward(level, rewardId);
+            claimedSomething = true;
+            rewardIndex++;
         }
 
         if (claimedSomething) {
+            player.sendMessage(ChatColor.GREEN + "You have successfully claimed rewards for level " + level + "!");
             plugin.getBattlePassStorage().savePlayerData(player.getUniqueId(), true);
         } else {
-            player.sendMessage(ChatColor.YELLOW + "Semua hadiah untuk level " + level + " sudah kamu klaim.");
-        }
-    }
-
-    private void executeCommands(OfflinePlayer player, List<String> commands) {
-        ConsoleCommandSender console = Bukkit.getServer().getConsoleSender();
-        for (String command : commands) {
-            String processedCommand = command.replace("%player%", player.getName());
-            Bukkit.dispatchCommand(console, processedCommand);
+            player.sendMessage(ChatColor.YELLOW + "All available rewards for level " + level + " have already been claimed.");
         }
     }
 }
