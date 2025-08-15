@@ -281,7 +281,7 @@ public class KBPCommand implements TabExecutor {
             return true;
         }
         plugin.reload();
-        sender.sendMessage(plugin.getMiniMessage().deserialize("§aBerhasil memuat ulang semua konfigurasi & data dari file."));
+        sender.sendMessage(plugin.getMiniMessage().deserialize("<green>Berhasil memuat ulang semua konfigurasi & data dari file.</green>"));
         return true;
     }
 
@@ -304,7 +304,7 @@ public class KBPCommand implements TabExecutor {
         try {
             int amount = Integer.parseInt(args[2]);
             plugin.getExperienceService().setXP(target, amount);
-            sender.sendMessage(plugin.getMiniMessage().deserialize("§aBerhasil mengatur jumlah XP menjadi §e" + amount + " §auntuk §b" + target.getName() + "§a."));
+            sender.sendMessage(plugin.getMiniMessage().deserialize("<green>Berhasil mengatur jumlah XP menjadi <yellow>" + amount + "</yellow> untuk <aqua>" + target.getName() + "</aqua>.</green>"));
         } catch (NumberFormatException e) {
             sender.sendMessage(plugin.getMiniMessage().deserialize("<red>The amount must be a number."));
         }
@@ -330,7 +330,7 @@ public class KBPCommand implements TabExecutor {
         try {
             int amount = Integer.parseInt(args[2]);
             plugin.getExperienceService().addXP(target, amount);
-            sender.sendMessage(plugin.getMiniMessage().deserialize("§aBerhasil menambahkan §e" + amount + " XP §akepada §b" + target.getName() + "§a."));
+            sender.sendMessage(plugin.getMiniMessage().deserialize("<green>Berhasil menambahkan <yellow>" + amount + " XP</yellow> kepada <aqua>" + target.getName() + "</aqua>.</green>"));
         } catch (NumberFormatException e) {
             sender.sendMessage(plugin.getMiniMessage().deserialize("<red>The amount must be a number."));
         }
@@ -356,7 +356,7 @@ public class KBPCommand implements TabExecutor {
         try {
             int level = Integer.parseInt(args[2]);
             plugin.getExperienceService().setLevel(target, level);
-            sender.sendMessage(plugin.getMiniMessage().deserialize("§aBerhasil mengatur level §b" + target.getName() + " §amenjadi §e" + level + "§a."));
+            sender.sendMessage(plugin.getMiniMessage().deserialize("<green>Berhasil mengatur level <aqua>" + target.getName() + "</aqua> menjadi <yellow>" + level + "</yellow>.</green>"));
         } catch (NumberFormatException e) {
             sender.sendMessage(plugin.getMiniMessage().deserialize("<red>The level must be a number."));
         }
