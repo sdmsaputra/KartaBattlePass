@@ -79,7 +79,7 @@ public class QuestService {
         progress.setCompleted(true);
 
         // Announce completion
-        player.sendMessage("§aQuest Completed: §f" + quest.getId());
+        player.sendMessage(plugin.getMiniMessage().deserialize("<green>Quest Completed: <white>" + quest.getId() + "</white></green>"));
 
         // Give rewards
         for (String command : quest.getRewards()) {
