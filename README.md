@@ -38,7 +38,15 @@ KartaBattlePass is a flexible and feature-rich Battle Pass plugin for Spigot-bas
 
 ### `config.yml`
 
-This file contains the main settings for the Battle Pass system. See the comments in the generated file for details.
+This file contains the main settings for the Battle Pass system.
+
+#### Level Progression
+You can control how much experience is required to level up using the `battlepass.exp-per-level-base` setting. The formula used is `EXP Required = current_level * exp-per-level-base`.
+For example, if `exp-per-level-base` is `100`:
+- To get from Level 1 to Level 2, you need `1 * 100 = 100` EXP.
+- To get from Level 10 to Level 11, you need `10 * 100 = 1000` EXP.
+
+See the comments in the generated file for other details.
 
 ### `rewards.yml`
 

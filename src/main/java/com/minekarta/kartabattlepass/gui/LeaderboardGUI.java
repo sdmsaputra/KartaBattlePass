@@ -11,6 +11,7 @@ import org.bukkit.OfflinePlayer;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.Inventory;
+import org.bukkit.inventory.InventoryHolder;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.inventory.meta.SkullMeta;
@@ -21,7 +22,7 @@ import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
-public class LeaderboardGUI {
+public class LeaderboardGUI implements InventoryHolder {
     private final KartaBattlePass plugin;
     private final MiniMessage miniMessage;
     private final Player viewer;
@@ -65,9 +66,14 @@ public class LeaderboardGUI {
         int effectivePage = Math.max(0, Math.min(page, totalPages - 1));
 
         String title = titleTemplate.replace("<page>", String.valueOf(effectivePage + 1));
-        this.inventory = Bukkit.createInventory(null, size, miniMessage.deserialize(title));
+        this.inventory = Bukkit.createInventory(this, size, miniMessage.deserialize(title));
 
         initializeItems(guiConfig, players, effectivePage, totalPages);
+    }
+
+    @Override
+    public Inventory getInventory() {
+        return inventory;
     }
 
     private void initializeItems(ConfigurationSection guiConfig, List<BattlePassPlayer> players, int effectivePage, int totalPages) {

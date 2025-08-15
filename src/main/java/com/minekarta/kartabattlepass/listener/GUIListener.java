@@ -30,21 +30,23 @@ public class GUIListener implements Listener {
     @EventHandler
     public void onInventoryClick(InventoryClickEvent event) {
         if (!(event.getWhoClicked() instanceof Player)) return;
-
         Player player = (Player) event.getWhoClicked();
-        String plainTitle = PlainTextComponentSerializer.plainText().serialize(event.getView().title());
 
+        // Check for custom GUIs using InventoryHolder
+        if (event.getInventory().getHolder() instanceof LeaderboardGUI) {
+            handleLeaderboardMenuClick(event, player);
+            return; // Early exit to prevent other checks
+        }
+
+        // Fallback to title-based checks for other GUIs
+        String plainTitle = PlainTextComponentSerializer.plainText().serialize(event.getView().title());
         String mainMenuTitle = plugin.getConfig().getString("gui.main-menu.title", "KartaBattlePass");
         String rewardsMenuTitlePrefix = plugin.getConfig().getString("gui.rewards.title", "Battle Pass Rewards");
-        String leaderboardMenuTitlePrefix = plugin.getConfig().getString("gui.leaderboard.title", "Leaderboard").split(" - ")[0];
-
 
         if (plainTitle.equals(mainMenuTitle)) {
             handleMainMenuClick(event, player);
         } else if (plainTitle.startsWith(rewardsMenuTitlePrefix)) {
             handleRewardsMenuClick(event, player, plainTitle);
-        } else if (plainTitle.startsWith(leaderboardMenuTitlePrefix)) {
-            handleLeaderboardMenuClick(event, player, plainTitle);
         }
     }
 
@@ -66,8 +68,9 @@ public class GUIListener implements Listener {
         }
     }
 
-    private void handleLeaderboardMenuClick(InventoryClickEvent event, Player player, String title) {
-        // Always cancel the event for this GUI to prevent item moving.
+    private void handleLeaderboardMenuClick(InventoryClickEvent event, Player player) {
+        // The instanceof check in onInventoryClick guarantees this is our GUI.
+        // All we need to do is cancel the event to prevent item movement.
         event.setCancelled(true);
 
         // We only care about clicks inside the GUI, not the player's inventory.
@@ -84,29 +87,19 @@ public class GUIListener implements Listener {
         ConfigurationSection leaderboardConfig = plugin.getConfig().getConfigurationSection("gui.leaderboard");
         if (leaderboardConfig == null) return;
 
+        String title = PlainTextComponentSerializer.plainText().serialize(event.getView().title());
         int currentPage = parsePageFromTitle(title) - 1;
 
         int previousPageSlot = leaderboardConfig.getInt("previous-page.slot", 45);
         int nextPageSlot = leaderboardConfig.getInt("next-page.slot", 53);
         int backButtonSlot = leaderboardConfig.getInt("back-button.slot", 49);
 
-        if (event.getSlot() == previousPageSlot) {
-            if (currentPage > 0) {
-                // Ensure it's the correct item before acting
-                if (clickedItem.getType().name().equals(leaderboardConfig.getString("previous-page.material", "ARROW"))) {
-                    new LeaderboardGUI(plugin, player, currentPage - 1);
-                }
-            }
+        if (event.getSlot() == previousPageSlot && currentPage > 0) {
+            new LeaderboardGUI(plugin, player, currentPage - 1);
         } else if (event.getSlot() == nextPageSlot) {
-            // Ensure it's the correct item before acting
-            if (clickedItem.getType().name().equals(leaderboardConfig.getString("next-page.material", "ARROW"))) {
-                new LeaderboardGUI(plugin, player, currentPage + 1);
-            }
+            new LeaderboardGUI(plugin, player, currentPage + 1);
         } else if (event.getSlot() == backButtonSlot) {
-            // Ensure it's the correct item before acting
-            if (clickedItem.getType().name().equals(leaderboardConfig.getString("back-button.material", "BARRIER"))) {
-                new MainGUI(plugin).open(player);
-            }
+            new MainGUI(plugin).open(player);
         }
         // Any other click (e.g., on a player head) is cancelled and does nothing, which is the desired behavior.
     }
