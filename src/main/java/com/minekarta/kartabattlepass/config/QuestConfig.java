@@ -55,6 +55,7 @@ public class QuestConfig {
                 String type = questSection.getString("type");
                 String target = questSection.getString("target", null); // Optional
                 int amount = questSection.getInt("amount", 1);
+                int exp = questSection.getInt("exp", 0); // Read the exp value, defaulting to 0.
                 List<String> rewards = questSection.getStringList("rewards");
 
                 if (type == null) {
@@ -62,7 +63,7 @@ public class QuestConfig {
                     continue;
                 }
 
-                Quest quest = new Quest(questId, type, target, amount, rewards);
+                Quest quest = new Quest(questId, type, target, amount, exp, rewards);
                 quests.put(questId, quest);
             }
         }
