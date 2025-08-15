@@ -2,6 +2,7 @@ package com.minekarta.kartabattlepass.config;
 
 import com.minekarta.kartabattlepass.KartaBattlePass;
 import com.minekarta.kartabattlepass.quest.Quest;
+import com.minekarta.kartabattlepass.quest.QuestCategory;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.configuration.file.YamlConfiguration;
@@ -22,6 +23,7 @@ public class QuestConfig {
     private FileConfiguration config;
 
     private final Map<String, Quest> quests = new HashMap<>();
+    private final Map<String, QuestCategory> questCategories = new LinkedHashMap<>();
 
     public QuestConfig(KartaBattlePass plugin) {
         this.plugin = plugin;
@@ -39,6 +41,34 @@ public class QuestConfig {
     public void loadConfig() {
         this.config = YamlConfiguration.loadConfiguration(configFile);
         loadQuests();
+        loadQuestCategories();
+    }
+
+    private void loadQuestCategories() {
+        questCategories.clear();
+        ConfigurationSection categoriesSection = config.getConfigurationSection("quest-categories");
+        if (categoriesSection == null) {
+            plugin.getLogger().warning("Could not find 'quest-categories' section in quests.yml");
+            return;
+        }
+
+        for (String categoryId : categoriesSection.getKeys(false)) {
+            ConfigurationSection categorySection = categoriesSection.getConfigurationSection(categoryId);
+            if (categorySection != null) {
+                String displayName = categorySection.getString("display-name", "Unnamed Category");
+                String displayItem = categorySection.getString("display-item", "STONE");
+                List<String> questIds = categorySection.getStringList("quests");
+
+                if (questIds.isEmpty()) {
+                    plugin.getLogger().warning("Quest category '" + categoryId + "' has no quests listed. Skipping.");
+                    continue;
+                }
+
+                QuestCategory category = new QuestCategory(categoryId, displayName, displayItem, questIds);
+                questCategories.put(categoryId, category);
+            }
+        }
+        plugin.getLogger().info("Loaded " + questCategories.size() + " quest categories.");
     }
 
     private void loadQuests() {
@@ -76,5 +106,9 @@ public class QuestConfig {
 
     public Quest getQuest(String questId) {
         return quests.get(questId);
+    }
+
+    public Map<String, QuestCategory> getQuestCategories() {
+        return Collections.unmodifiableMap(questCategories);
     }
 }

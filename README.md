@@ -5,16 +5,15 @@ KartaBattlePass is a flexible and feature-rich Battle Pass plugin for Spigot-bas
 ## Features
 
 - **Leveling System:** Players earn XP and level up their Battle Pass.
-- **Quest System:** Players can complete a variety of configurable quests to earn Battle Pass EXP and other rewards.
-- **Configurable XP Sources:** In addition to quests, customize the amount of XP gained from activities like mob kills, mining, fishing, and crafting.
+- **Sequential Quest System:** Players complete quests in ordered categories. This provides a structured progression system.
 - **Flexible Reward System:**
   - Define complex rewards for each level in a dedicated `rewards.yml`.
   - Multiple reward types: Items, Commands, Money (via Vault), and Permissions (via Vault).
   - Support for separate `free` and `premium` reward tracks.
-- **GUIs for Interaction:**
+- **Interactive GUIs:**
   - `/bp` opens a main menu to navigate to other GUIs.
   - `/bp rewards`: A user-friendly GUI for players to view and claim their earned rewards.
-  - `/bp quests`: A GUI to view available and completed quests (feature to be fully implemented).
+  - `/bp quests`: A GUI to view quest categories and the quests within them, showing current progress.
   - `/bp top`: A leaderboard to see who is the highest level.
 - **Auto-Grant or Manual Claim:** Choose whether rewards are granted automatically on level-up or if players must claim them manually.
 - **PlaceholderAPI Support:** Integrated placeholders to display Battle Pass information.
@@ -54,41 +53,53 @@ This file defines all the rewards players can earn from leveling up. The structu
 
 ### `quests.yml`
 
-This file defines all the available quests players can complete to earn EXP and other rewards.
+This file defines the quest categories and the individual quests. Players must complete quests in the order they are listed within a category.
 
 ```yaml
-# Quest Structure:
-# <quest-id>:
-#   type: The type of action to track (e.g., "block-break", "kill-mob"). See below for a full list.
-#   target: (Optional) The specific target, e.g., 'ZOMBIE' for 'kill-mob' or 'DIAMOND_ORE' for 'block-break'.
-#   amount: The number of actions required to complete the quest.
-#   exp: The amount of Battle Pass Experience (EXP) to award on completion.
-#   rewards: A list of commands to be executed when the quest is completed. Use %player% for the player's name.
+# Define your categories here.
+# The 'quests' list under each category defines the sequence.
+quest-categories:
+  mining:
+    display-name: "&b⛏ Mining Quests"
+    display-item: "DIAMOND_PICKAXE"
+    quests:
+      - "mine_stone"
+      - "mine_coal"
+      - "mine_diamonds"
+  combat:
+    display-name: "&c⚔ Combat Quests"
+    display-item: "DIAMOND_SWORD"
+    quests:
+      - "kill_zombies"
+      - "kill_skeletons"
 
+# Define the individual quests here.
+# The IDs must match the ones used in the categories above.
 quests:
-  daily_miner:
+  mine_stone:
     type: "block-break"
     target: "STONE"
     amount: 64
     exp: 50
+    display-name: "&7Mine 64 Stone"
     rewards:
       - "eco give %player% 100"
-  daily_killer:
+  kill_zombies:
     type: "kill-mob"
     target: "ZOMBIE"
     amount: 10
     exp: 25
+    display-name: "&2Kill 10 Zombies"
     rewards:
       - "minecraft:give %player% minecraft:iron_sword 1"
+# ... and so on for all other quests
 ```
-
-A full list of valid quest types can be found in the comments of the generated `quests.yml` file.
 
 ## Commands
 
 - `/battlepass`, `/bp` - Main command alias.
 - `/bp rewards` - Opens the reward claiming GUI.
-- `/bp quests` - Opens the quest list GUI (coming soon).
+- `/bp quests` - Opens the quest category GUI.
 - `/bp top` - Opens the leaderboard GUI.
 - `/bp progress [player]` - Checks your or another player's progress.
 - `/bp help` - Shows the help message.
