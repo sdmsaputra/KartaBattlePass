@@ -1,5 +1,5 @@
-/app/src/main/java/com/minekarta/kartabattlepass/service/SeasonService.java
 /app/src/main/java/com/minekarta/kartabattlepass/hooks/VaultHook.java
+/app/src/main/java/com/minekarta/kartabattlepass/service/SeasonService.java
 /app/src/main/java/com/minekarta/kartabattlepass/gui/MainGUI.java
 /app/src/main/java/com/minekarta/kartabattlepass/gui/QuestCategoryGUI.java
 /app/src/main/java/com/minekarta/kartabattlepass/event/PlayerBattlePassLevelUpEvent.java
