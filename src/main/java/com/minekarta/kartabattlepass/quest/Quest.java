@@ -24,6 +24,10 @@ public class Quest {
         return id;
     }
 
+    public String getDisplayName() {
+        return id;
+    }
+
     public String getType() {
         return type;
     }
