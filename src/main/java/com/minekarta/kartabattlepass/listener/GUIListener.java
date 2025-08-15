@@ -1,10 +1,9 @@
 package com.minekarta.kartabattlepass.listener;
 
 import com.minekarta.kartabattlepass.KartaBattlePass;
-import com.minekarta.kartabattlepass.gui.LeaderboardGUI;
-import com.minekarta.kartabattlepass.gui.MainGUI;
-import com.minekarta.kartabattlepass.gui.RewardGUI;
+import com.minekarta.kartabattlepass.gui.*;
 import com.minekarta.kartabattlepass.model.BattlePassPlayer;
+import com.minekarta.kartabattlepass.quest.QuestCategory;
 import com.minekarta.kartabattlepass.reward.Reward;
 import net.kyori.adventure.text.serializer.plain.PlainTextComponentSerializer;
 import org.bukkit.Material;
@@ -30,21 +29,31 @@ public class GUIListener implements Listener {
     @EventHandler
     public void onInventoryClick(InventoryClickEvent event) {
         if (!(event.getWhoClicked() instanceof Player)) return;
-
         Player player = (Player) event.getWhoClicked();
-        String plainTitle = PlainTextComponentSerializer.plainText().serialize(event.getView().title());
 
+        // Check for custom GUIs using InventoryHolder
+        if (event.getInventory().getHolder() instanceof LeaderboardGUI) {
+            handleLeaderboardMenuClick(event, player);
+            return;
+        }
+        if (event.getInventory().getHolder() instanceof QuestCategoryGUI) {
+            handleQuestCategoryGUIClick(event, player);
+            return;
+        }
+        if (event.getInventory().getHolder() instanceof QuestListGUI) {
+            handleQuestListGUIClick(event, player);
+            return;
+        }
+
+        // Fallback to title-based checks for older GUIs
+        String plainTitle = PlainTextComponentSerializer.plainText().serialize(event.getView().title());
         String mainMenuTitle = plugin.getConfig().getString("gui.main-menu.title", "KartaBattlePass");
         String rewardsMenuTitlePrefix = plugin.getConfig().getString("gui.rewards.title", "Battle Pass Rewards");
-        String leaderboardMenuTitlePrefix = plugin.getConfig().getString("gui.leaderboard.title", "Leaderboard").split(" - ")[0];
-
 
         if (plainTitle.equals(mainMenuTitle)) {
             handleMainMenuClick(event, player);
         } else if (plainTitle.startsWith(rewardsMenuTitlePrefix)) {
             handleRewardsMenuClick(event, player, plainTitle);
-        } else if (plainTitle.startsWith(leaderboardMenuTitlePrefix)) {
-            handleLeaderboardMenuClick(event, player, plainTitle);
         }
     }
 
@@ -61,36 +70,81 @@ public class GUIListener implements Listener {
         } else if (clickedSlot == itemsConfig.getInt("leaderboards.slot")) {
             new LeaderboardGUI(plugin, player, 0);
         } else if (clickedSlot == itemsConfig.getInt("quests.slot")) {
-            player.sendMessage("This feature is not yet implemented.");
-            player.closeInventory();
+            new QuestCategoryGUI(plugin, player).open();
         }
     }
 
-    private void handleLeaderboardMenuClick(InventoryClickEvent event, Player player, String title) {
+    private void handleLeaderboardMenuClick(InventoryClickEvent event, Player player) {
+        // The instanceof check in onInventoryClick guarantees this is our GUI.
+        // All we need to do is cancel the event to prevent item movement.
         event.setCancelled(true);
 
-        if (event.getClickedInventory() != player.getInventory()) {
-            ItemStack clickedItem = event.getCurrentItem();
-            if (clickedItem == null || clickedItem.getType() == Material.AIR) return;
+        // We only care about clicks inside the GUI, not the player's inventory.
+        if (event.getClickedInventory() != event.getView().getTopInventory()) {
+            return;
+        }
 
-            ConfigurationSection leaderboardConfig = plugin.getConfig().getConfigurationSection("gui.leaderboard");
-            if (leaderboardConfig == null) return;
+        ItemStack clickedItem = event.getCurrentItem();
+        if (clickedItem == null || clickedItem.getType() == Material.AIR) {
+            return;
+        }
 
-            int currentPage = parsePageFromTitle(title) - 1;
+        // Handle navigation button clicks
+        ConfigurationSection leaderboardConfig = plugin.getConfig().getConfigurationSection("gui.leaderboard");
+        if (leaderboardConfig == null) return;
 
-            int previousPageSlot = leaderboardConfig.getInt("previous-page.slot", 45);
-            int nextPageSlot = leaderboardConfig.getInt("next-page.slot", 53);
-            int backButtonSlot = leaderboardConfig.getInt("back-button.slot", 49);
+        String title = PlainTextComponentSerializer.plainText().serialize(event.getView().title());
+        int currentPage = parsePageFromTitle(title) - 1;
 
-            if (event.getSlot() == previousPageSlot) {
-                if (currentPage > 0) {
-                    new LeaderboardGUI(plugin, player, currentPage - 1);
-                }
-            } else if (event.getSlot() == nextPageSlot) {
-                new LeaderboardGUI(plugin, player, currentPage + 1);
-            } else if (event.getSlot() == backButtonSlot) {
-                new MainGUI(plugin).open(player);
+        int previousPageSlot = leaderboardConfig.getInt("previous-page.slot", 45);
+        int nextPageSlot = leaderboardConfig.getInt("next-page.slot", 53);
+        int backButtonSlot = leaderboardConfig.getInt("back-button.slot", 49);
+
+        if (event.getSlot() == previousPageSlot && currentPage > 0) {
+            new LeaderboardGUI(plugin, player, currentPage - 1);
+        } else if (event.getSlot() == nextPageSlot) {
+            new LeaderboardGUI(plugin, player, currentPage + 1);
+        } else if (event.getSlot() == backButtonSlot) {
+            new MainGUI(plugin).open(player);
+        }
+        // Any other click (e.g., on a player head) is cancelled and does nothing, which is the desired behavior.
+    }
+
+    private void handleQuestCategoryGUIClick(InventoryClickEvent event, Player player) {
+        event.setCancelled(true);
+
+        if (event.getClickedInventory() != event.getView().getTopInventory()) return;
+        ItemStack clickedItem = event.getCurrentItem();
+        if (clickedItem == null || clickedItem.getType().isAir()) return;
+
+        // Handle back button
+        if (event.getSlot() == 49) { // Assuming back button is at slot 49
+            new MainGUI(plugin).open(player);
+            return;
+        }
+
+        // Find the category that was clicked
+        QuestCategory clickedCategory = null;
+        for (QuestCategory category : plugin.getQuestConfig().getQuestCategories().values()) {
+            if (clickedItem.getType() == Material.matchMaterial(category.getDisplayItem())) {
+                clickedCategory = category;
+                break;
             }
+        }
+
+        if (clickedCategory != null) {
+            new QuestListGUI(plugin, player, clickedCategory).open();
+        }
+    }
+
+    private void handleQuestListGUIClick(InventoryClickEvent event, Player player) {
+        event.setCancelled(true);
+
+        if (event.getClickedInventory() != event.getView().getTopInventory()) return;
+
+        // Handle back button
+        if (event.getSlot() == 49) { // Assuming back button is at slot 49
+            new QuestCategoryGUI(plugin, player).open();
         }
     }
 

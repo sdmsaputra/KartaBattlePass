@@ -12,14 +12,16 @@ public class BattlePassPlayer {
     private int exp;
     private final Map<Integer, List<String>> claimedRewards;
     private final Map<String, PlayerQuestProgress> questProgress;
+    private final Map<String, Integer> questCategoryProgress;
 
-    public BattlePassPlayer(UUID uuid, String name, int level, int exp, Map<Integer, List<String>> claimedRewards, Map<String, PlayerQuestProgress> questProgress) {
+    public BattlePassPlayer(UUID uuid, String name, int level, int exp, Map<Integer, List<String>> claimedRewards, Map<String, PlayerQuestProgress> questProgress, Map<String, Integer> questCategoryProgress) {
         this.uuid = uuid;
         this.name = name;
         this.level = level;
         this.exp = exp;
         this.claimedRewards = claimedRewards != null ? claimedRewards : new HashMap<>();
         this.questProgress = questProgress != null ? questProgress : new HashMap<>();
+        this.questCategoryProgress = questCategoryProgress != null ? questCategoryProgress : new HashMap<>();
     }
 
     public UUID getUuid() {
@@ -72,5 +74,17 @@ public class BattlePassPlayer {
 
     public void addQuestProgress(PlayerQuestProgress progress) {
         this.questProgress.put(progress.getQuestId(), progress);
+    }
+
+    public Map<String, Integer> getQuestCategoryProgress() {
+        return questCategoryProgress;
+    }
+
+    public int getCategoryProgress(String categoryId) {
+        return questCategoryProgress.getOrDefault(categoryId, 0);
+    }
+
+    public void advanceCategoryProgress(String categoryId) {
+        questCategoryProgress.put(categoryId, getCategoryProgress(categoryId) + 1);
     }
 }
