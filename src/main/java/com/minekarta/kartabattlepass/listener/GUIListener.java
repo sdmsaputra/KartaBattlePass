@@ -67,31 +67,48 @@ public class GUIListener implements Listener {
     }
 
     private void handleLeaderboardMenuClick(InventoryClickEvent event, Player player, String title) {
+        // Always cancel the event for this GUI to prevent item moving.
         event.setCancelled(true);
 
-        if (event.getClickedInventory() != player.getInventory()) {
-            ItemStack clickedItem = event.getCurrentItem();
-            if (clickedItem == null || clickedItem.getType() == Material.AIR) return;
+        // We only care about clicks inside the GUI, not the player's inventory.
+        if (event.getClickedInventory() != event.getView().getTopInventory()) {
+            return;
+        }
 
-            ConfigurationSection leaderboardConfig = plugin.getConfig().getConfigurationSection("gui.leaderboard");
-            if (leaderboardConfig == null) return;
+        ItemStack clickedItem = event.getCurrentItem();
+        if (clickedItem == null || clickedItem.getType() == Material.AIR) {
+            return;
+        }
 
-            int currentPage = parsePageFromTitle(title) - 1;
+        // Handle navigation button clicks
+        ConfigurationSection leaderboardConfig = plugin.getConfig().getConfigurationSection("gui.leaderboard");
+        if (leaderboardConfig == null) return;
 
-            int previousPageSlot = leaderboardConfig.getInt("previous-page.slot", 45);
-            int nextPageSlot = leaderboardConfig.getInt("next-page.slot", 53);
-            int backButtonSlot = leaderboardConfig.getInt("back-button.slot", 49);
+        int currentPage = parsePageFromTitle(title) - 1;
 
-            if (event.getSlot() == previousPageSlot) {
-                if (currentPage > 0) {
+        int previousPageSlot = leaderboardConfig.getInt("previous-page.slot", 45);
+        int nextPageSlot = leaderboardConfig.getInt("next-page.slot", 53);
+        int backButtonSlot = leaderboardConfig.getInt("back-button.slot", 49);
+
+        if (event.getSlot() == previousPageSlot) {
+            if (currentPage > 0) {
+                // Ensure it's the correct item before acting
+                if (clickedItem.getType().name().equals(leaderboardConfig.getString("previous-page.material", "ARROW"))) {
                     new LeaderboardGUI(plugin, player, currentPage - 1);
                 }
-            } else if (event.getSlot() == nextPageSlot) {
+            }
+        } else if (event.getSlot() == nextPageSlot) {
+            // Ensure it's the correct item before acting
+            if (clickedItem.getType().name().equals(leaderboardConfig.getString("next-page.material", "ARROW"))) {
                 new LeaderboardGUI(plugin, player, currentPage + 1);
-            } else if (event.getSlot() == backButtonSlot) {
+            }
+        } else if (event.getSlot() == backButtonSlot) {
+            // Ensure it's the correct item before acting
+            if (clickedItem.getType().name().equals(leaderboardConfig.getString("back-button.material", "BARRIER"))) {
                 new MainGUI(plugin).open(player);
             }
         }
+        // Any other click (e.g., on a player head) is cancelled and does nothing, which is the desired behavior.
     }
 
     private void handleRewardsMenuClick(InventoryClickEvent event, Player player, String title) {

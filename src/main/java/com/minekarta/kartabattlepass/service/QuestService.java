@@ -81,7 +81,12 @@ public class QuestService {
         // Announce completion
         player.sendMessage(plugin.getMiniMessage().deserialize("<green>Quest Completed: <white>" + quest.getId() + "</white></green>"));
 
-        // Give rewards
+        // Give EXP reward
+        if (quest.getExp() > 0) {
+            plugin.getExperienceService().addXP(player, quest.getExp());
+        }
+
+        // Give command rewards
         for (String command : quest.getRewards()) {
             String processedCommand = command.replace("%player%", player.getName());
             Bukkit.dispatchCommand(Bukkit.getConsoleSender(), processedCommand);
