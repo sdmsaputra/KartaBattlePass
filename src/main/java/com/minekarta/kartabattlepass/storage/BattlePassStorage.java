@@ -87,10 +87,18 @@ public class BattlePassStorage {
                     }
                 }
 
-                bpPlayer = new BattlePassPlayer(uuid, name, level, exp, claimedRewards, questProgress);
+                Map<String, Integer> questCategoryProgress = new ConcurrentHashMap<>();
+                if (section.isConfigurationSection("questCategoryProgress")) {
+                    ConfigurationSection categoryProgressSection = section.getConfigurationSection("questCategoryProgress");
+                    for (String categoryId : categoryProgressSection.getKeys(false)) {
+                        questCategoryProgress.put(categoryId, categoryProgressSection.getInt(categoryId));
+                    }
+                }
+
+                bpPlayer = new BattlePassPlayer(uuid, name, level, exp, claimedRewards, questProgress, questCategoryProgress);
             } else {
                 // Create new player data
-                bpPlayer = new BattlePassPlayer(uuid, player.getName(), 1, 0, new ConcurrentHashMap<>(), new ConcurrentHashMap<>());
+                bpPlayer = new BattlePassPlayer(uuid, player.getName(), 1, 0, new ConcurrentHashMap<>(), new ConcurrentHashMap<>(), new ConcurrentHashMap<>());
             }
 
             // Put the loaded data into the cache on the main thread
@@ -117,6 +125,7 @@ public class BattlePassStorage {
                 currentData.set(path + ".level", bpPlayer.getLevel());
                 currentData.set(path + ".exp", bpPlayer.getExp());
                 currentData.set(path + ".claimedRewards", bpPlayer.getClaimedRewards());
+                currentData.set(path + ".questCategoryProgress", bpPlayer.getQuestCategoryProgress());
 
                 // Save quest progress
                 for (Map.Entry<String, PlayerQuestProgress> entry : bpPlayer.getQuestProgress().entrySet()) {
@@ -167,6 +176,7 @@ public class BattlePassStorage {
                     currentData.set(path + ".level", bpPlayer.getLevel());
                     currentData.set(path + ".exp", bpPlayer.getExp());
                     currentData.set(path + ".claimedRewards", bpPlayer.getClaimedRewards());
+                    currentData.set(path + ".questCategoryProgress", bpPlayer.getQuestCategoryProgress());
 
                     // Save quest progress for all players
                     for (Map.Entry<String, PlayerQuestProgress> questEntry : bpPlayer.getQuestProgress().entrySet()) {
@@ -234,7 +244,15 @@ public class BattlePassStorage {
                     }
                 }
 
-                allPlayers.add(new BattlePassPlayer(uuid, name, level, exp, claimedRewards, questProgress));
+                Map<String, Integer> questCategoryProgress = new ConcurrentHashMap<>();
+                if (section.isConfigurationSection("questCategoryProgress")) {
+                    ConfigurationSection categoryProgressSection = section.getConfigurationSection("questCategoryProgress");
+                    for (String categoryId : categoryProgressSection.getKeys(false)) {
+                        questCategoryProgress.put(categoryId, categoryProgressSection.getInt(categoryId));
+                    }
+                }
+
+                allPlayers.add(new BattlePassPlayer(uuid, name, level, exp, claimedRewards, questProgress, questCategoryProgress));
 
             } catch (IllegalArgumentException e) {
                 plugin.getLogger().warning("Skipping invalid UUID in players.yml: " + uuidString);

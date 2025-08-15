@@ -1,10 +1,9 @@
 package com.minekarta.kartabattlepass.listener;
 
 import com.minekarta.kartabattlepass.KartaBattlePass;
-import com.minekarta.kartabattlepass.gui.LeaderboardGUI;
-import com.minekarta.kartabattlepass.gui.MainGUI;
-import com.minekarta.kartabattlepass.gui.RewardGUI;
+import com.minekarta.kartabattlepass.gui.*;
 import com.minekarta.kartabattlepass.model.BattlePassPlayer;
+import com.minekarta.kartabattlepass.quest.QuestCategory;
 import com.minekarta.kartabattlepass.reward.Reward;
 import net.kyori.adventure.text.serializer.plain.PlainTextComponentSerializer;
 import org.bukkit.Material;
@@ -35,10 +34,18 @@ public class GUIListener implements Listener {
         // Check for custom GUIs using InventoryHolder
         if (event.getInventory().getHolder() instanceof LeaderboardGUI) {
             handleLeaderboardMenuClick(event, player);
-            return; // Early exit to prevent other checks
+            return;
+        }
+        if (event.getInventory().getHolder() instanceof QuestCategoryGUI) {
+            handleQuestCategoryGUIClick(event, player);
+            return;
+        }
+        if (event.getInventory().getHolder() instanceof QuestListGUI) {
+            handleQuestListGUIClick(event, player);
+            return;
         }
 
-        // Fallback to title-based checks for other GUIs
+        // Fallback to title-based checks for older GUIs
         String plainTitle = PlainTextComponentSerializer.plainText().serialize(event.getView().title());
         String mainMenuTitle = plugin.getConfig().getString("gui.main-menu.title", "KartaBattlePass");
         String rewardsMenuTitlePrefix = plugin.getConfig().getString("gui.rewards.title", "Battle Pass Rewards");
@@ -63,8 +70,7 @@ public class GUIListener implements Listener {
         } else if (clickedSlot == itemsConfig.getInt("leaderboards.slot")) {
             new LeaderboardGUI(plugin, player, 0);
         } else if (clickedSlot == itemsConfig.getInt("quests.slot")) {
-            player.sendMessage("This feature is not yet implemented.");
-            player.closeInventory();
+            new QuestCategoryGUI(plugin, player).open();
         }
     }
 
@@ -102,6 +108,44 @@ public class GUIListener implements Listener {
             new MainGUI(plugin).open(player);
         }
         // Any other click (e.g., on a player head) is cancelled and does nothing, which is the desired behavior.
+    }
+
+    private void handleQuestCategoryGUIClick(InventoryClickEvent event, Player player) {
+        event.setCancelled(true);
+
+        if (event.getClickedInventory() != event.getView().getTopInventory()) return;
+        ItemStack clickedItem = event.getCurrentItem();
+        if (clickedItem == null || clickedItem.getType().isAir()) return;
+
+        // Handle back button
+        if (event.getSlot() == 49) { // Assuming back button is at slot 49
+            new MainGUI(plugin).open(player);
+            return;
+        }
+
+        // Find the category that was clicked
+        QuestCategory clickedCategory = null;
+        for (QuestCategory category : plugin.getQuestConfig().getQuestCategories().values()) {
+            if (clickedItem.getType() == Material.matchMaterial(category.getDisplayItem())) {
+                clickedCategory = category;
+                break;
+            }
+        }
+
+        if (clickedCategory != null) {
+            new QuestListGUI(plugin, player, clickedCategory).open();
+        }
+    }
+
+    private void handleQuestListGUIClick(InventoryClickEvent event, Player player) {
+        event.setCancelled(true);
+
+        if (event.getClickedInventory() != event.getView().getTopInventory()) return;
+
+        // Handle back button
+        if (event.getSlot() == 49) { // Assuming back button is at slot 49
+            new QuestCategoryGUI(plugin, player).open();
+        }
     }
 
     private void handleRewardsMenuClick(InventoryClickEvent event, Player player, String title) {

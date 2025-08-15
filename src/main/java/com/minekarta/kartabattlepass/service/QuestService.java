@@ -4,82 +4,90 @@ import com.minekarta.kartabattlepass.KartaBattlePass;
 import com.minekarta.kartabattlepass.model.BattlePassPlayer;
 import com.minekarta.kartabattlepass.quest.PlayerQuestProgress;
 import com.minekarta.kartabattlepass.quest.Quest;
+import com.minekarta.kartabattlepass.quest.QuestCategory;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 
 import java.util.Map;
 
 /**
- * Service for managing battle pass quests.
+ * Service for managing battle pass quests with sequential categories.
  */
 public class QuestService {
 
     private final KartaBattlePass plugin;
-    private final Map<String, Quest> availableQuests;
 
     public QuestService(KartaBattlePass plugin) {
         this.plugin = plugin;
-        // This assumes QuestConfig is initialized in the main class before this service.
-        this.availableQuests = plugin.getQuestConfig().getQuests();
     }
 
     /**
-     * Handles the progression of a quest for a player.
+     * Handles the progression of a quest for a player based on an action.
      *
      * @param player The player performing the action.
-     * @param questType The type of action (e.g., "block-break").
+     * @param actionType The type of action (e.g., "block-break").
      * @param target The specific target of the action (e.g., "STONE"), can be null.
      * @param amount The amount to increment by.
      */
-    public void progressQuest(Player player, String questType, String target, int amount) {
+    public void progressQuest(Player player, String actionType, String target, int amount) {
         BattlePassPlayer bpPlayer = plugin.getBattlePassStorage().getPlayerData(player.getUniqueId());
         if (bpPlayer == null) return;
 
-        // In a real implementation, we would assign quests to players.
-        // For now, let's assume the player has all quests active.
-        // We will iterate through all available quests.
-        for (Quest quest : availableQuests.values()) {
-            // Check if the quest type matches the action
-            if (!quest.getType().equalsIgnoreCase(questType)) {
+        Map<String, QuestCategory> categories = plugin.getQuestConfig().getQuestCategories();
+
+        // Iterate through each quest category
+        for (QuestCategory category : categories.values()) {
+            int progressIndex = bpPlayer.getCategoryProgress(category.getId());
+
+            // Check if the category is already completed
+            if (category.isCompleted(progressIndex)) {
                 continue;
             }
 
-            // Check if the quest target matches the action target
-            // If quest target is null, it's a generic action type (e.g., "fish" anything)
-            if (quest.getTarget() != null && !quest.getTarget().equalsIgnoreCase(target)) {
+            // Get the current active quest for the player in this category
+            String currentQuestId = category.getQuestId(progressIndex);
+            if (currentQuestId == null) continue; // Should not happen if isCompleted is false, but good practice
+
+            Quest currentQuest = plugin.getQuestConfig().getQuest(currentQuestId);
+            if (currentQuest == null) {
+                plugin.getLogger().warning("Player " + player.getName() + " is on an invalid quest '" + currentQuestId + "' in category '" + category.getId() + "'.");
                 continue;
             }
 
-            // Get the player's progress for this quest
-            PlayerQuestProgress progress = bpPlayer.getQuestProgress(quest.getId());
+            // Check if the action matches the current quest's requirements
+            if (!currentQuest.getType().equalsIgnoreCase(actionType)) {
+                continue;
+            }
+            if (currentQuest.getTarget() != null && !currentQuest.getTarget().equalsIgnoreCase(target)) {
+                continue;
+            }
 
-            // If the player doesn't have this quest yet, give it to them.
-            // This is a simplification. A real system would have daily/weekly assignments.
+            // The action matches the player's current quest. Let's update their progress.
+            PlayerQuestProgress progress = bpPlayer.getQuestProgress(currentQuest.getId());
             if (progress == null) {
-                progress = new PlayerQuestProgress(quest.getId());
+                progress = new PlayerQuestProgress(currentQuest.getId());
                 bpPlayer.addQuestProgress(progress);
             }
 
-            // If the quest is already completed, do nothing.
+            // Don't progress already completed quests (e.g., if server lags and sends event twice)
             if (progress.isCompleted()) {
                 continue;
             }
 
-            // Increment the progress
             progress.incrementAmount(amount);
 
             // Check if the quest is now completed
-            if (progress.getCurrentAmount() >= quest.getAmount()) {
-                completeQuest(player, quest, progress);
+            if (progress.getCurrentAmount() >= currentQuest.getAmount()) {
+                completeQuest(player, bpPlayer, currentQuest, category, progress);
             }
         }
     }
 
-    private void completeQuest(Player player, Quest quest, PlayerQuestProgress progress) {
+    private void completeQuest(Player player, BattlePassPlayer bpPlayer, Quest quest, QuestCategory category, PlayerQuestProgress progress) {
         progress.setCompleted(true);
 
         // Announce completion
-        player.sendMessage(plugin.getMiniMessage().deserialize("<green>Quest Completed: <white>" + quest.getId() + "</white></green>"));
+        player.sendMessage(plugin.getMiniMessage().deserialize("<green>Quest Completed: <white>" + quest.getDisplayName() + "</white></green>"));
 
         // Give EXP reward
         if (quest.getExp() > 0) {
@@ -90,6 +98,15 @@ public class QuestService {
         for (String command : quest.getRewards()) {
             String processedCommand = command.replace("%player%", player.getName());
             Bukkit.dispatchCommand(Bukkit.getConsoleSender(), processedCommand);
+        }
+
+        // Advance the player to the next quest in the category
+        bpPlayer.advanceCategoryProgress(category.getId());
+
+        // Announce if the whole category is complete
+        int newProgressIndex = bpPlayer.getCategoryProgress(category.getId());
+        if (category.isCompleted(newProgressIndex)) {
+            player.sendMessage(plugin.getMiniMessage().deserialize("<gold>Quest Category Completed: <white>" + category.getDisplayName() + "</white></gold>"));
         }
     }
 }
