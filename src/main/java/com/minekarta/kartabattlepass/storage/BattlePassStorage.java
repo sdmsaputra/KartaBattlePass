@@ -164,38 +164,36 @@ public class BattlePassStorage {
             return;
         }
 
-        plugin.getServer().getScheduler().runTaskAsynchronously(plugin, () -> {
-            synchronized (saveLock) {
-                FileConfiguration currentData = YamlConfiguration.loadConfiguration(dataFile);
+        synchronized (saveLock) {
+            FileConfiguration currentData = YamlConfiguration.loadConfiguration(dataFile);
 
-                for (Map.Entry<UUID, BattlePassPlayer> entry : playerData.entrySet()) {
-                    UUID uuid = entry.getKey();
-                    BattlePassPlayer bpPlayer = entry.getValue();
-                    String path = uuid.toString();
-                    currentData.set(path + ".name", bpPlayer.getName());
-                    currentData.set(path + ".level", bpPlayer.getLevel());
-                    currentData.set(path + ".exp", bpPlayer.getExp());
-                    currentData.set(path + ".claimedRewards", bpPlayer.getClaimedRewards());
-                    currentData.set(path + ".questCategoryProgress", bpPlayer.getQuestCategoryProgress());
+            for (Map.Entry<UUID, BattlePassPlayer> entry : playerData.entrySet()) {
+                UUID uuid = entry.getKey();
+                BattlePassPlayer bpPlayer = entry.getValue();
+                String path = uuid.toString();
+                currentData.set(path + ".name", bpPlayer.getName());
+                currentData.set(path + ".level", bpPlayer.getLevel());
+                currentData.set(path + ".exp", bpPlayer.getExp());
+                currentData.set(path + ".claimedRewards", bpPlayer.getClaimedRewards());
+                currentData.set(path + ".questCategoryProgress", bpPlayer.getQuestCategoryProgress());
 
-                    // Save quest progress for all players
-                    for (Map.Entry<String, PlayerQuestProgress> questEntry : bpPlayer.getQuestProgress().entrySet()) {
-                        String questId = questEntry.getKey();
-                        PlayerQuestProgress progress = questEntry.getValue();
-                        String questPath = path + ".questProgress." + questId;
-                        currentData.set(questPath + ".currentAmount", progress.getCurrentAmount());
-                        currentData.set(questPath + ".completed", progress.isCompleted());
-                    }
-                }
-
-                try {
-                    currentData.save(dataFile);
-                    plugin.getLogger().info("Successfully saved all player data.");
-                } catch (IOException e) {
-                    plugin.getLogger().log(Level.SEVERE, "Could not save all player data to players.yml!", e);
+                // Save quest progress for all players
+                for (Map.Entry<String, PlayerQuestProgress> questEntry : bpPlayer.getQuestProgress().entrySet()) {
+                    String questId = questEntry.getKey();
+                    PlayerQuestProgress progress = questEntry.getValue();
+                    String questPath = path + ".questProgress." + questId;
+                    currentData.set(questPath + ".currentAmount", progress.getCurrentAmount());
+                    currentData.set(questPath + ".completed", progress.isCompleted());
                 }
             }
-        });
+
+            try {
+                currentData.save(dataFile);
+                plugin.getLogger().info("Successfully saved all player data.");
+            } catch (IOException e) {
+                plugin.getLogger().log(Level.SEVERE, "Could not save all player data to players.yml!", e);
+            }
+        }
     }
 
     public BattlePassPlayer getPlayerData(UUID uniqueId) {
