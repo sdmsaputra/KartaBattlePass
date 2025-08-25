@@ -2,12 +2,11 @@ package com.karta.battlepass.core.quest.type;
 
 import com.karta.battlepass.api.quest.QuestContext;
 import com.karta.battlepass.api.quest.QuestType;
+import java.util.Map;
+import java.util.Optional;
 import org.bukkit.event.Event;
 import org.bukkit.event.entity.EntityDeathEvent;
 import org.jetbrains.annotations.NotNull;
-
-import java.util.Map;
-import java.util.Optional;
 
 public class KillMobQuest implements QuestType {
     @Override
@@ -20,7 +19,8 @@ public class KillMobQuest implements QuestType {
         if (!(context.event() instanceof EntityDeathEvent event)) {
             return Optional.empty();
         }
-        if (event.getEntity().getKiller() == null || !event.getEntity().getKiller().equals(context.player())) {
+        if (event.getEntity().getKiller() == null
+                || !event.getEntity().getKiller().equals(context.player())) {
             return Optional.empty();
         }
 
@@ -28,7 +28,8 @@ public class KillMobQuest implements QuestType {
         String targetMob = (String) objectives.get("mob");
 
         if (targetMob != null && event.getEntityType().name().equalsIgnoreCase(targetMob)) {
-            int currentProgress = ((Number) context.progress().progress().getOrDefault("value", 0)).intValue();
+            int currentProgress =
+                    ((Number) context.progress().progress().getOrDefault("value", 0)).intValue();
             return Optional.of(Map.of("value", currentProgress + 1));
         }
 

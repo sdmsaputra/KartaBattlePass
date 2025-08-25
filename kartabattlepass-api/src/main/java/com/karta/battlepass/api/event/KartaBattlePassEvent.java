@@ -4,9 +4,7 @@ import org.bukkit.event.Event;
 import org.bukkit.event.HandlerList;
 import org.jetbrains.annotations.NotNull;
 
-/**
- * A base for all KartaBattlePass custom events.
- */
+/** A base for all KartaBattlePass custom events. */
 public abstract class KartaBattlePassEvent extends Event {
 
     private static final HandlerList handlers = new HandlerList();
@@ -15,7 +13,7 @@ public abstract class KartaBattlePassEvent extends Event {
         super(false); // All events are sync by default unless specified otherwise
     }
 
-    public KartaBattlePassEvent(boolean isAsync) {
+    public KartaBattlePassEvent(final boolean isAsync) {
         super(isAsync);
     }
 

@@ -23,7 +23,8 @@ public class BukkitEventBus implements EventBus {
         if (event instanceof TierChangeEventData data) {
             Player player = Bukkit.getPlayer(data.playerUuid());
             if (player != null) {
-                KBPTierChangeEvent bukkitEvent = new KBPTierChangeEvent(player, data.oldTier(), data.newTier());
+                KBPTierChangeEvent bukkitEvent =
+                        new KBPTierChangeEvent(player, data.oldTier(), data.newTier());
                 plugin.getServer().getPluginManager().callEvent(bukkitEvent);
             }
         }

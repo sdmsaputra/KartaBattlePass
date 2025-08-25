@@ -1,13 +1,9 @@
 package com.karta.battlepass.core.scheduler;
 
-/**
- * Represents a task that has been scheduled for execution.
- */
+/** Represents a task that has been scheduled for execution. */
 public interface KartaTask {
 
-    /**
-     * Cancels the task if it has not already been executed.
-     */
+    /** Cancels the task if it has not already been executed. */
     void cancel();
 
     /**

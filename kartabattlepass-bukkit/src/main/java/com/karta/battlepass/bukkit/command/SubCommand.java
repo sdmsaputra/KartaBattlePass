@@ -1,14 +1,14 @@
 package com.karta.battlepass.bukkit.command;
 
+import java.util.List;
 import org.bukkit.command.CommandSender;
 import org.jetbrains.annotations.NotNull;
-
-import java.util.List;
 
 public interface SubCommand {
 
     /**
      * Gets the name of the subcommand.
+     *
      * @return The name.
      */
     @NotNull
@@ -16,6 +16,7 @@ public interface SubCommand {
 
     /**
      * Gets a list of aliases for the subcommand.
+     *
      * @return The list of aliases.
      */
     @NotNull
@@ -23,6 +24,7 @@ public interface SubCommand {
 
     /**
      * Gets the permission required to use this subcommand.
+     *
      * @return The permission node, or null if no permission is required.
      */
     String getPermission();

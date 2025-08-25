@@ -1,16 +1,14 @@
 package com.karta.battlepass.core.db.argument;
 
+import java.nio.ByteBuffer;
+import java.sql.Types;
+import java.util.UUID;
 import org.jdbi.v3.core.argument.AbstractArgumentFactory;
 import org.jdbi.v3.core.argument.Argument;
 import org.jdbi.v3.core.config.ConfigRegistry;
 
-import java.nio.ByteBuffer;
-import java.sql.Types;
-import java.util.UUID;
-
 /**
- * Jdbi argument factory for binding UUIDs.
- * Binds as BINARY for MySQL/Postgres and TEXT for SQLite.
+ * Jdbi argument factory for binding UUIDs. Binds as BINARY for MySQL/Postgres and TEXT for SQLite.
  */
 public class UuidArgumentFactory extends AbstractArgumentFactory<UUID> {
 
@@ -21,7 +19,8 @@ public class UuidArgumentFactory extends AbstractArgumentFactory<UUID> {
     @Override
     protected Argument build(UUID value, ConfigRegistry config) {
         return (position, statement, ctx) -> {
-            String dbName = ctx.getConnection().getMetaData().getDatabaseProductName().toLowerCase();
+            String dbName =
+                    ctx.getConnection().getMetaData().getDatabaseProductName().toLowerCase();
             if (dbName.contains("sqlite")) {
                 statement.setString(position, value.toString());
             } else {

@@ -9,14 +9,14 @@ import com.karta.battlepass.api.service.QuestService;
 import com.karta.battlepass.api.service.RewardService;
 import com.karta.battlepass.api.service.SeasonService;
 import com.karta.battlepass.bukkit.command.KbpCommand;
+import com.karta.battlepass.bukkit.event.BukkitEventBus;
 import com.karta.battlepass.bukkit.gui.GuiListener;
 import com.karta.battlepass.bukkit.integration.economy.VaultEconomyProvider;
 import com.karta.battlepass.bukkit.integration.papi.KartaBattlePassExpansion;
 import com.karta.battlepass.bukkit.listener.MasterQuestListener;
-import com.karta.battlepass.bukkit.event.BukkitEventBus;
 import com.karta.battlepass.bukkit.listener.PlayerListener;
-import com.karta.battlepass.bukkit.scheduler.SchedulerFactory;
 import com.karta.battlepass.bukkit.quest.PlaytimeTracker;
+import com.karta.battlepass.bukkit.scheduler.SchedulerFactory;
 import com.karta.battlepass.core.config.ConfigManager;
 import com.karta.battlepass.core.config.MainConfig;
 import com.karta.battlepass.core.db.DatabaseManager;
@@ -32,11 +32,10 @@ import com.karta.battlepass.core.service.impl.PlayerServiceImpl;
 import com.karta.battlepass.core.service.impl.QuestServiceImpl;
 import com.karta.battlepass.core.service.impl.RewardServiceImpl;
 import com.karta.battlepass.core.service.impl.SeasonServiceImpl;
-import org.bukkit.plugin.ServicePriority;
-import org.bukkit.plugin.java.JavaPlugin;
-
 import java.io.IOException;
 import java.util.concurrent.atomic.AtomicReference;
+import org.bukkit.plugin.ServicePriority;
+import org.bukkit.plugin.java.JavaPlugin;
 
 public class KartaBattlePassPlugin extends JavaPlugin {
 
@@ -63,21 +62,35 @@ public class KartaBattlePassPlugin extends JavaPlugin {
 
             // 4. Initialize Services
             this.serviceRegistry = new ServiceRegistry();
-            serviceRegistry.register(PlayerService.class, new PlayerServiceImpl(serviceRegistry, databaseManager.getJdbi(), scheduler, eventBus));
+            serviceRegistry.register(
+                    PlayerService.class,
+                    new PlayerServiceImpl(
+                            serviceRegistry, databaseManager.getJdbi(), scheduler, eventBus));
             serviceRegistry.register(SeasonService.class, new SeasonServiceImpl(configRef));
-            serviceRegistry.register(PassService.class, new PassServiceImpl(serviceRegistry, scheduler, databaseManager.getJdbi()));
-            serviceRegistry.register(QuestService.class, new QuestServiceImpl(serviceRegistry, configManager));
-            serviceRegistry.register(RewardService.class, new RewardServiceImpl(serviceRegistry, configManager, scheduler, databaseManager.getJdbi()));
+            serviceRegistry.register(
+                    PassService.class,
+                    new PassServiceImpl(serviceRegistry, scheduler, databaseManager.getJdbi()));
+            serviceRegistry.register(
+                    QuestService.class, new QuestServiceImpl(serviceRegistry, configManager));
+            serviceRegistry.register(
+                    RewardService.class,
+                    new RewardServiceImpl(
+                            serviceRegistry, configManager, scheduler, databaseManager.getJdbi()));
             serviceRegistry.register(BoosterService.class, new BoosterServiceImpl(serviceRegistry));
-            serviceRegistry.register(LeaderboardService.class, new LeaderboardServiceImpl(serviceRegistry));
+            serviceRegistry.register(
+                    LeaderboardService.class, new LeaderboardServiceImpl(serviceRegistry));
 
             // 5. Register API
             this.api = new KartaBattlePassAPIImpl(this.serviceRegistry, this);
-            getServer().getServicesManager().register(KartaBattlePassAPI.class, this.api, this, ServicePriority.Normal);
+            getServer()
+                    .getServicesManager()
+                    .register(KartaBattlePassAPI.class, this.api, this, ServicePriority.Normal);
 
             // 6. Register Commands & Listeners
             getCommand("kartabattlepass").setExecutor(new KbpCommand(this.serviceRegistry));
-            getServer().getPluginManager().registerEvents(new PlayerListener(this.serviceRegistry), this);
+            getServer()
+                    .getPluginManager()
+                    .registerEvents(new PlayerListener(this.serviceRegistry), this);
             getServer().getPluginManager().registerEvents(new GuiListener(), this);
             new MasterQuestListener(this.api.getQuestService(), this);
 
@@ -134,7 +147,11 @@ public class KartaBattlePassPlugin extends JavaPlugin {
         if (economyService.setActiveProvider(mainConfig.economy().provider())) {
             getLogger().info("Active economy provider set to: " + mainConfig.economy().provider());
         } else {
-            getLogger().warning("Could not set active economy provider to " + mainConfig.economy().provider() + ". No economy features will be available.");
+            getLogger()
+                    .warning(
+                            "Could not set active economy provider to "
+                                    + mainConfig.economy().provider()
+                                    + ". No economy features will be available.");
         }
     }
 }

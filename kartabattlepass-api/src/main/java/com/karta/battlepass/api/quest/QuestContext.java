@@ -8,9 +8,9 @@ import org.jetbrains.annotations.NotNull;
 
 /**
  * Provides context for a quest type's logic processing.
- * <p>
- * This object is passed to {@link QuestType} methods to provide access to the
- * relevant player, quest definition, and progress state.
+ *
+ * <p>This object is passed to {@link QuestType} methods to provide access to the relevant player,
+ * quest definition, and progress state.
  *
  * @param player The player involved in the quest event.
  * @param quest The static definition of the quest being processed.
@@ -18,9 +18,7 @@ import org.jetbrains.annotations.NotNull;
  * @param event The Bukkit event that triggered the quest check.
  */
 public record QuestContext(
-    @NotNull Player player,
-    @NotNull Quest quest,
-    @NotNull QuestProgress progress,
-    @NotNull Event event
-) {
-}
+        @NotNull Player player,
+        @NotNull Quest quest,
+        @NotNull QuestProgress progress,
+        @NotNull Event event) {}

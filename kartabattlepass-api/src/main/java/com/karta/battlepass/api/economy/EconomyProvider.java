@@ -1,16 +1,15 @@
 package com.karta.battlepass.api.economy;
 
-import org.jetbrains.annotations.NotNull;
-
 import java.math.BigDecimal;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
+import org.jetbrains.annotations.NotNull;
 
 /**
  * A service provider interface for handling economy operations.
- * <p>
- * This allows KartaBattlePass to integrate with various economy plugins
- * without depending on them directly. Implementations should be thread-safe.
+ *
+ * <p>This allows KartaBattlePass to integrate with various economy plugins without depending on
+ * them directly. Implementations should be thread-safe.
  */
 public interface EconomyProvider {
 
@@ -36,8 +35,8 @@ public interface EconomyProvider {
      *
      * @param playerUuid The UUID of the player to withdraw from.
      * @param amount The amount to withdraw.
-     * @return A {@link CompletableFuture} that completes with {@code true} if the transaction
-     *         was successful, {@code false} otherwise (e.g., insufficient funds).
+     * @return A {@link CompletableFuture} that completes with {@code true} if the transaction was
+     *     successful, {@code false} otherwise (e.g., insufficient funds).
      */
     @NotNull
     CompletableFuture<Boolean> withdraw(@NotNull UUID playerUuid, @NotNull BigDecimal amount);
@@ -47,8 +46,8 @@ public interface EconomyProvider {
      *
      * @param playerUuid The UUID of the player to deposit to.
      * @param amount The amount to deposit.
-     * @return A {@link CompletableFuture} that completes with {@code true} if the transaction
-     *         was successful, {@code false} otherwise.
+     * @return A {@link CompletableFuture} that completes with {@code true} if the transaction was
+     *     successful, {@code false} otherwise.
      */
     @NotNull
     CompletableFuture<Boolean> deposit(@NotNull UUID playerUuid, @NotNull BigDecimal amount);
@@ -58,11 +57,12 @@ public interface EconomyProvider {
      *
      * @param playerUuid The UUID of the player to check.
      * @param amount The amount to check for.
-     * @return A {@link CompletableFuture} that completes with {@code true} if the player has
-     *         enough funds, {@code false} otherwise.
+     * @return A {@link CompletableFuture} that completes with {@code true} if the player has enough
+     *     funds, {@code false} otherwise.
      */
     @NotNull
-    default CompletableFuture<Boolean> hasFunds(@NotNull UUID playerUuid, @NotNull BigDecimal amount) {
+    default CompletableFuture<Boolean> hasFunds(
+            @NotNull UUID playerUuid, @NotNull BigDecimal amount) {
         return getBalance(playerUuid).thenApply(balance -> balance.compareTo(amount) >= 0);
     }
 }

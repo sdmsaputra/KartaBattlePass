@@ -1,8 +1,5 @@
 package com.karta.battlepass.bukkit.listener;
 
-import com.karta.battlepass.core.service.ServiceRegistry;
-import org.bukkit.event.EventHandler;
-import org.bukkit.event.Listener;
 import com.karta.battlepass.api.service.PlayerService;
 import com.karta.battlepass.core.service.ServiceRegistry;
 import com.karta.battlepass.core.service.impl.PlayerServiceImpl;

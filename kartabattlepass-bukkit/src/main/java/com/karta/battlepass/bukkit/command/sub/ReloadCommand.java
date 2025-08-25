@@ -2,11 +2,10 @@ package com.karta.battlepass.bukkit.command.sub;
 
 import com.karta.battlepass.bukkit.command.SubCommand;
 import com.karta.battlepass.core.service.ServiceRegistry;
-import org.bukkit.command.CommandSender;
-import org.jetbrains.annotations.NotNull;
-
 import java.util.Collections;
 import java.util.List;
+import org.bukkit.command.CommandSender;
+import org.jetbrains.annotations.NotNull;
 
 public class ReloadCommand implements SubCommand {
 
@@ -38,7 +37,8 @@ public class ReloadCommand implements SubCommand {
     }
 
     @Override
-    public @NotNull List<String> onTabComplete(@NotNull CommandSender sender, @NotNull String[] args) {
+    public @NotNull List<String> onTabComplete(
+            @NotNull CommandSender sender, @NotNull String[] args) {
         return Collections.emptyList();
     }
 }

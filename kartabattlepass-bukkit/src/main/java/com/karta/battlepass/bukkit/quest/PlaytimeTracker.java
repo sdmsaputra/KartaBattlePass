@@ -2,10 +2,9 @@ package com.karta.battlepass.bukkit.quest;
 
 import com.karta.battlepass.api.service.QuestService;
 import com.karta.battlepass.core.scheduler.KartaScheduler;
+import java.time.Duration;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
-
-import java.time.Duration;
 
 public class PlaytimeTracker {
 
@@ -24,13 +23,20 @@ public class PlaytimeTracker {
     private void track() {
         for (Player player : Bukkit.getOnlinePlayers()) {
             // This is a simplified version. A real implementation would be more optimized.
-            questService.getAvailableQuests(player.getUniqueId(), null).thenAccept(quests -> {
-                quests.stream()
-                        .filter(q -> q.type().equalsIgnoreCase("PLAYTIME"))
-                        .forEach(quest -> {
-                            questService.incrementQuestProgress(player.getUniqueId(), quest.id(), 60); // 60 seconds
-                        });
-            });
+            questService
+                    .getAvailableQuests(player.getUniqueId(), null)
+                    .thenAccept(
+                            quests -> {
+                                quests.stream()
+                                        .filter(q -> q.type().equalsIgnoreCase("PLAYTIME"))
+                                        .forEach(
+                                                quest -> {
+                                                    questService.incrementQuestProgress(
+                                                            player.getUniqueId(),
+                                                            quest.id(),
+                                                            60); // 60 seconds
+                                                });
+                            });
         }
     }
 }

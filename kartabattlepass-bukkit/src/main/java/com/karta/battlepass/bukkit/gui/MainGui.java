@@ -18,21 +18,37 @@ public class MainGui extends Menu {
     }
 
     private void initializeItems() {
-        playerService.getPlayerProfile(player.getUniqueId()).thenAccept(profileOpt -> {
-            if (profileOpt.isEmpty()) {
-                player.sendMessage("Could not load your profile.");
-                return;
-            }
-            var profile = profileOpt.get();
+        playerService
+                .getPlayerProfile(player.getUniqueId())
+                .thenAccept(
+                        profileOpt -> {
+                            if (profileOpt.isEmpty()) {
+                                player.sendMessage("Could not load your profile.");
+                                return;
+                            }
+                            var profile = profileOpt.get();
 
-            inventory.setItem(13, createGuiItem(Material.PLAYER_HEAD,
-                    "<gold>Your Profile",
-                    "<gray>Points: <yellow>" + profile.points(),
-                    "<gray>Tier: <yellow>" + profile.tier()));
+                            inventory.setItem(
+                                    13,
+                                    createGuiItem(
+                                            Material.PLAYER_HEAD,
+                                            "<gold>Your Profile",
+                                            "<gray>Points: <yellow>" + profile.points(),
+                                            "<gray>Tier: <yellow>" + profile.tier()));
 
-            inventory.setItem(30, createGuiItem(Material.BOOK, "<green>Quests", "Click to view your quests."));
-            inventory.setItem(31, createGuiItem(Material.CHEST, "<aqua>Rewards", "Click to view your rewards."));
-        });
+                            inventory.setItem(
+                                    30,
+                                    createGuiItem(
+                                            Material.BOOK,
+                                            "<green>Quests",
+                                            "Click to view your quests."));
+                            inventory.setItem(
+                                    31,
+                                    createGuiItem(
+                                            Material.CHEST,
+                                            "<aqua>Rewards",
+                                            "Click to view your rewards."));
+                        });
     }
 
     @Override

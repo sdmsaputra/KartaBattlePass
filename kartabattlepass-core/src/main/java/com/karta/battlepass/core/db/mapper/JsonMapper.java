@@ -3,18 +3,15 @@ package com.karta.battlepass.core.db.mapper;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import org.jdbi.v3.core.mapper.ColumnMapper;
-import org.jdbi.v3.core.statement.StatementContext;
-
 import java.io.IOException;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.Collections;
 import java.util.Map;
+import org.jdbi.v3.core.mapper.ColumnMapper;
+import org.jdbi.v3.core.statement.StatementContext;
 
-/**
- * Maps a JSON string column to a Map<String, Object>.
- */
+/** Maps a JSON string column to a Map<String, Object>. */
 public class JsonMapper implements ColumnMapper<Map<String, Object>> {
 
     private final ObjectMapper objectMapper;
@@ -24,7 +21,8 @@ public class JsonMapper implements ColumnMapper<Map<String, Object>> {
     }
 
     @Override
-    public Map<String, Object> map(ResultSet r, int columnNumber, StatementContext ctx) throws SQLException {
+    public Map<String, Object> map(ResultSet r, int columnNumber, StatementContext ctx)
+            throws SQLException {
         String json = r.getString(columnNumber);
         if (json == null || json.isEmpty()) {
             return Collections.emptyMap();

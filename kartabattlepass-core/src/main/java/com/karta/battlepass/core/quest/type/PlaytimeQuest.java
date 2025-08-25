@@ -2,16 +2,13 @@ package com.karta.battlepass.core.quest.type;
 
 import com.karta.battlepass.api.quest.QuestContext;
 import com.karta.battlepass.api.quest.QuestType;
+import java.util.Map;
+import java.util.Optional;
 import org.bukkit.event.Event;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-import java.util.Map;
-import java.util.Optional;
-
-/**
- * A quest type that is not driven by events, but by a repeating task.
- */
+/** A quest type that is not driven by events, but by a repeating task. */
 public class PlaytimeQuest implements QuestType {
     @Nullable
     @Override

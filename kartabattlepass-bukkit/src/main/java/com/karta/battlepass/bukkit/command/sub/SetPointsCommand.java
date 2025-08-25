@@ -3,15 +3,13 @@ package com.karta.battlepass.bukkit.command.sub;
 import com.karta.battlepass.api.service.PlayerService;
 import com.karta.battlepass.bukkit.command.SubCommand;
 import com.karta.battlepass.core.service.ServiceRegistry;
+import java.util.Collections;
+import java.util.List;
+import java.util.stream.Collectors;
 import org.bukkit.Bukkit;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 import org.jetbrains.annotations.NotNull;
-
-import java.util.Collections;
-import java.util.List;
-import java.util.UUID;
-import java.util.stream.Collectors;
 
 public class SetPointsCommand implements SubCommand {
 
@@ -57,13 +55,18 @@ public class SetPointsCommand implements SubCommand {
             return;
         }
 
-        playerService.setPoints(target.getUniqueId(), amount).thenAccept(v -> {
-            sender.sendMessage("Set " + target.getName() + "'s points to " + amount);
-        });
+        playerService
+                .setPoints(target.getUniqueId(), amount)
+                .thenAccept(
+                        v -> {
+                            sender.sendMessage(
+                                    "Set " + target.getName() + "'s points to " + amount);
+                        });
     }
 
     @Override
-    public @NotNull List<String> onTabComplete(@NotNull CommandSender sender, @NotNull String[] args) {
+    public @NotNull List<String> onTabComplete(
+            @NotNull CommandSender sender, @NotNull String[] args) {
         if (args.length == 1) {
             return Bukkit.getOnlinePlayers().stream()
                     .map(Player::getName)

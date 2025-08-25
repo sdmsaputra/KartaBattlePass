@@ -4,10 +4,9 @@ import com.karta.battlepass.api.data.leaderboard.LeaderboardEntry;
 import com.karta.battlepass.api.data.leaderboard.LeaderboardMetric;
 import com.karta.battlepass.api.service.LeaderboardService;
 import com.karta.battlepass.core.service.ServiceRegistry;
-import org.jetbrains.annotations.NotNull;
-
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
+import org.jetbrains.annotations.NotNull;
 
 public class LeaderboardServiceImpl implements LeaderboardService {
 
@@ -18,13 +17,15 @@ public class LeaderboardServiceImpl implements LeaderboardService {
     }
 
     @Override
-    public @NotNull CompletableFuture<List<LeaderboardEntry>> getLeaderboardPage(@NotNull LeaderboardMetric metric, int page, int pageSize) {
+    public @NotNull CompletableFuture<List<LeaderboardEntry>> getLeaderboardPage(
+            @NotNull LeaderboardMetric metric, int page, int pageSize) {
         // TODO: Implement logic
         return CompletableFuture.completedFuture(List.of());
     }
 
     @Override
-    public @NotNull CompletableFuture<List<LeaderboardEntry>> getLeaderboardSnapshot(@NotNull LeaderboardMetric metric, int limit) {
+    public @NotNull CompletableFuture<List<LeaderboardEntry>> getLeaderboardSnapshot(
+            @NotNull LeaderboardMetric metric, int limit) {
         // TODO: Implement logic
         return CompletableFuture.completedFuture(List.of());
     }

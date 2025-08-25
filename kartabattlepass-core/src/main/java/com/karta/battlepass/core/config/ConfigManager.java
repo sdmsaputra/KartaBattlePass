@@ -3,14 +3,13 @@ package com.karta.battlepass.core.config;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
-import org.jetbrains.annotations.NotNull;
-
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Files;
 import java.util.HashMap;
 import java.util.Map;
+import org.jetbrains.annotations.NotNull;
 
 public class ConfigManager {
 
@@ -29,13 +28,15 @@ public class ConfigManager {
         this.objectMapper.registerModule(new JavaTimeModule());
     }
 
-    public <T> T loadConfig(@NotNull String fileName, @NotNull Class<T> configClass) throws IOException {
+    public <T> T loadConfig(@NotNull String fileName, @NotNull Class<T> configClass)
+            throws IOException {
         File file = new File(dataFolder, fileName);
         saveDefault(fileName, file);
         return objectMapper.readValue(file, configClass);
     }
 
-    public <T> Map<String, T> loadConfigsFromDirectory(@NotNull String dirName, @NotNull Class<T> configClass) {
+    public <T> Map<String, T> loadConfigsFromDirectory(
+            @NotNull String dirName, @NotNull Class<T> configClass) {
         File dir = new File(dataFolder, dirName);
         if (!dir.exists()) {
             dir.mkdirs();
@@ -59,7 +60,8 @@ public class ConfigManager {
         return configs;
     }
 
-    private void saveDefault(@NotNull String resourceName, @NotNull File destination) throws IOException {
+    private void saveDefault(@NotNull String resourceName, @NotNull File destination)
+            throws IOException {
         if (!destination.exists()) {
             try (InputStream inputStream = resourceClassLoader.getResourceAsStream(resourceName)) {
                 if (inputStream != null) {

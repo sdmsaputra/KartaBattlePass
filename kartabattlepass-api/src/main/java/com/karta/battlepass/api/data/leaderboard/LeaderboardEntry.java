@@ -1,8 +1,7 @@
 package com.karta.battlepass.api.data.leaderboard;
 
-import org.jetbrains.annotations.NotNull;
-
 import java.util.UUID;
+import org.jetbrains.annotations.NotNull;
 
 /**
  * Represents a single entry in a leaderboard.
@@ -13,9 +12,4 @@ import java.util.UUID;
  * @param value The value associated with the entry (e.g., points or tier).
  */
 public record LeaderboardEntry(
-    int rank,
-    @NotNull UUID playerUuid,
-    @NotNull String playerName,
-    long value
-) {
-}
+        int rank, @NotNull UUID playerUuid, @NotNull String playerName, long value) {}

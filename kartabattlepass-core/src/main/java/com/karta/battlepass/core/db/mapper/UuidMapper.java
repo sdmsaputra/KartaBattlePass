@@ -1,17 +1,13 @@
 package com.karta.battlepass.core.db.mapper;
 
-import org.jdbi.v3.core.mapper.ColumnMapper;
-import org.jdbi.v3.core.statement.StatementContext;
-
 import java.nio.ByteBuffer;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.UUID;
+import org.jdbi.v3.core.mapper.ColumnMapper;
+import org.jdbi.v3.core.statement.StatementContext;
 
-/**
- * Maps UUIDs between Java and JDBC.
- * Handles BINARY(16) for MySQL/Postgres and TEXT for SQLite.
- */
+/** Maps UUIDs between Java and JDBC. Handles BINARY(16) for MySQL/Postgres and TEXT for SQLite. */
 public class UuidMapper implements ColumnMapper<UUID> {
 
     @Override

@@ -31,7 +31,7 @@ lerna-debug.log*
 # Other
 out/
 /coverage
-*.jar
+!gradle/wrapper/gradle-wrapper.jar
 *.war
 *.ear
 hs_err_pid*

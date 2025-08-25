@@ -1,8 +1,7 @@
 package com.karta.battlepass.api.data.season;
 
-import org.jetbrains.annotations.NotNull;
-
 import java.time.ZonedDateTime;
+import org.jetbrains.annotations.NotNull;
 
 /**
  * Represents a Battle Pass season with its defined time window.
@@ -13,15 +12,12 @@ import java.time.ZonedDateTime;
  * @param end The zoned date and time when the season ends.
  */
 public record Season(
-    long id,
-    @NotNull String name,
-    @NotNull ZonedDateTime start,
-    @NotNull ZonedDateTime end
-) {
+        long id, @NotNull String name, @NotNull ZonedDateTime start, @NotNull ZonedDateTime end) {
     /**
      * Checks if the season is currently active.
      *
-     * @return {@code true} if the current time is between the start and end times, {@code false} otherwise.
+     * @return {@code true} if the current time is between the start and end times, {@code false}
+     *     otherwise.
      */
     public boolean isActive() {
         ZonedDateTime now = ZonedDateTime.now(start.getZone());

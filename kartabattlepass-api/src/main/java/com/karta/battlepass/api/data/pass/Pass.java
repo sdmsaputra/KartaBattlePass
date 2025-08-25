@@ -1,9 +1,8 @@
 package com.karta.battlepass.api.data.pass;
 
-import org.jetbrains.annotations.NotNull;
-
 import java.time.Instant;
 import java.util.UUID;
+import org.jetbrains.annotations.NotNull;
 
 /**
  * Represents a player's ownership of a specific battle pass for a season.
@@ -14,9 +13,7 @@ import java.util.UUID;
  * @param acquiredAt The timestamp when the pass was acquired.
  */
 public record Pass(
-    @NotNull UUID playerUuid,
-    long seasonId,
-    @NotNull PassType type,
-    @NotNull Instant acquiredAt
-) {
-}
+        @NotNull UUID playerUuid,
+        long seasonId,
+        @NotNull PassType type,
+        @NotNull Instant acquiredAt) {}

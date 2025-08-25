@@ -6,6 +6,7 @@ plugins {
 
 dependencies {
     api(project(":kartabattlepass-api"))
+    compileOnlyApi(libs.paper.api)
 
     // Database
     implementation(libs.bundles.jdbi)
@@ -13,12 +14,15 @@ dependencies {
     implementation(libs.flyway.core)
     runtimeOnly(libs.flyway.mysql)
     runtimeOnly(libs.flyway.postgres)
+    annotationProcessor(libs.jdbi.generator)
+
 
     // Caching
     implementation(libs.caffeine)
 
     // Serialization & Config
     implementation(libs.bundles.jackson)
+    implementation(libs.jackson.datatype.jsr310)
     implementation(libs.snakeyaml)
 
     // Redis for network features

@@ -5,11 +5,11 @@ package com.karta.battlepass.api.exception;
  */
 public class StorageException extends KartaBattlePassException {
 
-    public StorageException(String message) {
+    public StorageException(final String message) {
         super(message);
     }
 
-    public StorageException(String message, Throwable cause) {
+    public StorageException(final String message, final Throwable cause) {
         super(message, cause);
     }
 }

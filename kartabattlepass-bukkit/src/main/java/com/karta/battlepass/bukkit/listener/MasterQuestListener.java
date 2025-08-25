@@ -1,15 +1,13 @@
 package com.karta.battlepass.bukkit.listener;
 
 import com.karta.battlepass.api.service.QuestService;
+import java.lang.reflect.Method;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 import org.bukkit.event.Event;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.plugin.Plugin;
-
-import java.lang.reflect.Method;
-import java.util.UUID;
 
 public class MasterQuestListener implements Listener {
 
@@ -31,17 +29,25 @@ public class MasterQuestListener implements Listener {
     }
 
     private <T extends Event> void registerGenericListener(Class<T> eventClass) {
-        Bukkit.getPluginManager().registerEvent(eventClass, this, EventPriority.MONITOR, (listener, event) -> {
-            if (!eventClass.isInstance(event)) {
-                return;
-            }
-            // A bit of reflection to get the player from the event.
-            // A better implementation might use a map of event_class -> player_getter_function.
-            Player player = getPlayerFromEvent(event);
-            if (player != null) {
-                questService.processQuestProgress(player.getUniqueId(), event);
-            }
-        }, plugin, true); // ignoreCancelled = true
+        Bukkit.getPluginManager()
+                .registerEvent(
+                        eventClass,
+                        this,
+                        EventPriority.MONITOR,
+                        (listener, event) -> {
+                            if (!eventClass.isInstance(event)) {
+                                return;
+                            }
+                            // A bit of reflection to get the player from the event.
+                            // A better implementation might use a map of event_class ->
+                            // player_getter_function.
+                            Player player = getPlayerFromEvent(event);
+                            if (player != null) {
+                                questService.processQuestProgress(player.getUniqueId(), event);
+                            }
+                        },
+                        plugin,
+                        true); // ignoreCancelled = true
     }
 
     private Player getPlayerFromEvent(Event event) {

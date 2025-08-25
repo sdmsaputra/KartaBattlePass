@@ -1,11 +1,10 @@
 package com.karta.battlepass.core.economy;
 
 import com.karta.battlepass.api.economy.EconomyProvider;
-import org.jetbrains.annotations.NotNull;
-
 import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
+import org.jetbrains.annotations.NotNull;
 
 public class EconomyServiceImpl implements EconomyService {
 

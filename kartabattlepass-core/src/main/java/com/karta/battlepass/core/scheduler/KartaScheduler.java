@@ -1,14 +1,13 @@
 package com.karta.battlepass.core.scheduler;
 
-import org.jetbrains.annotations.NotNull;
-
 import java.time.Duration;
 import java.util.concurrent.CompletableFuture;
 import java.util.function.Supplier;
+import org.jetbrains.annotations.NotNull;
 
 /**
- * An abstraction over the server's scheduler (Bukkit or Folia) to allow
- * for safe task execution on the appropriate threads.
+ * An abstraction over the server's scheduler (Bukkit or Folia) to allow for safe task execution on
+ * the appropriate threads.
  */
 public interface KartaScheduler {
 
@@ -63,7 +62,8 @@ public interface KartaScheduler {
      * @return A {@link KartaTask} representing the scheduled task.
      */
     @NotNull
-    KartaTask runTimerAsync(@NotNull Runnable task, @NotNull Duration delay, @NotNull Duration period);
+    KartaTask runTimerAsync(
+            @NotNull Runnable task, @NotNull Duration delay, @NotNull Duration period);
 
     /**
      * Executes a task on the main server thread on a timer.
@@ -74,5 +74,6 @@ public interface KartaScheduler {
      * @return A {@link KartaTask} representing the scheduled task.
      */
     @NotNull
-    KartaTask runTimerSync(@NotNull Runnable task, @NotNull Duration delay, @NotNull Duration period);
+    KartaTask runTimerSync(
+            @NotNull Runnable task, @NotNull Duration delay, @NotNull Duration period);
 }

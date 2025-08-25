@@ -11,9 +11,9 @@ import org.jetbrains.annotations.NotNull;
 
 /**
  * The main entry point for the KartaBattlePass API.
- * <p>
- * This interface provides access to all the core services of the plugin.
- * An instance of this API can be obtained from the Bukkit ServicesManager.
+ *
+ * <p>This interface provides access to all the core services of the plugin. An instance of this API
+ * can be obtained from the Bukkit ServicesManager.
  *
  * <pre>{@code
  * RegisteredServiceProvider<KartaBattlePassAPI> provider = Bukkit.getServicesManager().getRegistration(KartaBattlePassAPI.class);

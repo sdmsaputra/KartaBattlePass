@@ -1,22 +1,17 @@
 package com.karta.battlepass.core.db;
 
 import com.karta.battlepass.core.config.StorageConfig;
-import com.zaxxer.hikari.HikariConfig;
-import com.zaxxer.hikari.HikariDataSource;
-import org.flywaydb.core.Flyway;
 import com.karta.battlepass.core.db.argument.JsonArgumentFactory;
 import com.karta.battlepass.core.db.argument.UuidArgumentFactory;
 import com.karta.battlepass.core.db.mapper.JsonMapper;
 import com.karta.battlepass.core.db.mapper.UuidMapper;
 import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.HikariDataSource;
+import java.util.concurrent.TimeUnit;
 import org.flywaydb.core.Flyway;
 import org.jdbi.v3.core.Jdbi;
 import org.jdbi.v3.sqlobject.SqlObjectPlugin;
 import org.jetbrains.annotations.NotNull;
-
-import java.util.UUID;
-import java.util.concurrent.TimeUnit;
 
 public class DatabaseManager implements AutoCloseable {
 
@@ -26,12 +21,13 @@ public class DatabaseManager implements AutoCloseable {
     public DatabaseManager(@NotNull StorageConfig config) {
         this.dataSource = createDataSource(config);
         runMigrations(config);
-        this.jdbi = Jdbi.create(dataSource)
-                .installPlugin(new SqlObjectPlugin())
-                .registerArgument(new UuidArgumentFactory())
-                .registerColumnMapper(new UuidMapper())
-                .registerArgument(new JsonArgumentFactory())
-                .registerColumnMapper(new JsonMapper());
+        this.jdbi =
+                Jdbi.create(dataSource)
+                        .installPlugin(new SqlObjectPlugin())
+                        .registerArgument(new UuidArgumentFactory())
+                        .registerColumnMapper(new UuidMapper())
+                        .registerArgument(new JsonArgumentFactory())
+                        .registerColumnMapper(new JsonMapper());
     }
 
     private HikariDataSource createDataSource(@NotNull StorageConfig config) {
@@ -58,7 +54,8 @@ public class DatabaseManager implements AutoCloseable {
 
         StorageConfig.PoolOptions poolOptions = config.pool();
         hikariConfig.setMaximumPoolSize(poolOptions.maxPoolSize());
-        hikariConfig.setConnectionTimeout(TimeUnit.SECONDS.toMillis(poolOptions.connectionTimeout()));
+        hikariConfig.setConnectionTimeout(
+                TimeUnit.SECONDS.toMillis(poolOptions.connectionTimeout()));
         hikariConfig.setIdleTimeout(TimeUnit.MINUTES.toMillis(poolOptions.idleTimeout()));
         hikariConfig.setMaxLifetime(TimeUnit.MINUTES.toMillis(poolOptions.maxLifetime()));
 
@@ -71,12 +68,13 @@ public class DatabaseManager implements AutoCloseable {
     }
 
     private void runMigrations(@NotNull StorageConfig config) {
-        Flyway flyway = Flyway.configure()
-                .dataSource(dataSource)
-                .locations("db/migration/" + config.type().name().toLowerCase())
-                .defaultSchema(config.schema())
-                .createSchemas(true)
-                .load();
+        Flyway flyway =
+                Flyway.configure()
+                        .dataSource(dataSource)
+                        .locations("db/migration/" + config.type().name().toLowerCase())
+                        .defaultSchema(config.schema())
+                        .createSchemas(true)
+                        .load();
         flyway.migrate();
     }
 

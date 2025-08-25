@@ -1,16 +1,12 @@
 package com.karta.battlepass.api.event;
 
 import com.karta.battlepass.api.data.quest.Quest;
+import java.util.Map;
 import org.bukkit.entity.Player;
 import org.bukkit.event.Cancellable;
 import org.jetbrains.annotations.NotNull;
 
-import java.util.Map;
-
-/**
- * Called when a player's progress on a quest is about to be updated.
- * This event is cancellable.
- */
+/** Called when a player's progress on a quest is about to be updated. This event is cancellable. */
 public class KBPQuestProgressEvent extends KartaBattlePassEvent implements Cancellable {
     private final Player player;
     private final Quest quest;
@@ -18,7 +14,11 @@ public class KBPQuestProgressEvent extends KartaBattlePassEvent implements Cance
     private Map<String, Object> newProgress;
     private boolean cancelled;
 
-    public KBPQuestProgressEvent(@NotNull Player player, @NotNull Quest quest, @NotNull Map<String, Object> oldProgress, @NotNull Map<String, Object> newProgress) {
+    public KBPQuestProgressEvent(
+            @NotNull final Player player,
+            @NotNull final Quest quest,
+            @NotNull final Map<String, Object> oldProgress,
+            @NotNull final Map<String, Object> newProgress) {
         super(true); // This can be fired from async listeners
         this.player = player;
         this.quest = quest;
@@ -28,6 +28,7 @@ public class KBPQuestProgressEvent extends KartaBattlePassEvent implements Cance
 
     /**
      * Gets the player whose quest progress is changing.
+     *
      * @return The player.
      */
     @NotNull
@@ -37,6 +38,7 @@ public class KBPQuestProgressEvent extends KartaBattlePassEvent implements Cance
 
     /**
      * Gets the quest definition.
+     *
      * @return The quest.
      */
     @NotNull
@@ -46,6 +48,7 @@ public class KBPQuestProgressEvent extends KartaBattlePassEvent implements Cance
 
     /**
      * Gets the player's progress value before this event.
+     *
      * @return The old progress.
      */
     @NotNull
@@ -55,6 +58,7 @@ public class KBPQuestProgressEvent extends KartaBattlePassEvent implements Cance
 
     /**
      * Gets the player's progress value that will be set if the event is not cancelled.
+     *
      * @return The new progress.
      */
     @NotNull
@@ -64,9 +68,10 @@ public class KBPQuestProgressEvent extends KartaBattlePassEvent implements Cance
 
     /**
      * Sets the new progress value.
+     *
      * @param newProgress The new progress to set.
      */
-    public void setNewProgress(@NotNull Map<String, Object> newProgress) {
+    public void setNewProgress(@NotNull final Map<String, Object> newProgress) {
         this.newProgress = newProgress;
     }
 
@@ -76,7 +81,7 @@ public class KBPQuestProgressEvent extends KartaBattlePassEvent implements Cance
     }
 
     @Override
-    public void setCancelled(boolean cancel) {
+    public void setCancelled(final boolean cancel) {
         this.cancelled = cancel;
     }
 }
