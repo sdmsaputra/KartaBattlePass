@@ -36,6 +36,9 @@ dependencies {
 
     // bStats
     implementation(libs.bstats)
+
+    // Adventure Platform
+    implementation(libs.adventure.platform.bukkit)
 }
 
 tasks.withType<ShadowJar> {
