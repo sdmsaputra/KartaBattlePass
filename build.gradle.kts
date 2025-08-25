@@ -9,7 +9,6 @@ allprojects {
         maven("https://jitpack.io") // For Vault API
         maven("https://repo.citizensnpcs.co/") // For Citizens
         maven("https://s01.oss.sonatype.org/content/repositories/snapshots/") // For ProtocolLib
-        maven("https://maven.lumine.io/repository/maven-public/") // For MythicMobs
         maven("https://maven.enginehub.org/repo/") // For WorldGuard
     }
 }

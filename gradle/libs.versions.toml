@@ -83,6 +83,7 @@ errorprone = { id = "net.ltgt.errorprone", version.ref = "errorprone" }
 
 [bundles]
 adventure = ["adventure-api", "adventure-platform-bukkit", "adventure-text-minimessage"]
+adventure-api-bundle = ["adventure-api", "adventure-text-minimessage"]
 jdbi = ["jdbi-core", "jdbi-sqlobject"]
 jackson = ["jackson-databind", "jackson-dataformat-yaml"]
 testing = ["junit-api", "junit-engine", "junit-params", "mockbukkit", "assertj"]
