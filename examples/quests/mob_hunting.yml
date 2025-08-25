@@ -1,0 +1,33 @@
+# Example Quest Pack: Mob Hunting
+# Drop this file into your plugins/KartaBattlePass/quests/ directory.
+
+quests:
+  daily_kill_spiders:
+    name: "Arachnophobia"
+    description:
+      - "<gray>Defeat <red>20</red> Spiders."
+    category: DAILY
+    type: "KILL_MOB"
+    objectives:
+      target: 20
+      mob: "SPIDER"
+    points: 30
+    repeatable: true
+    rewards: []
+
+  weekly_kill_creepers:
+    name: "Explosive Expert"
+    description:
+      - "<gray>Defeat <red>50</red> Creepers."
+    category: WEEKLY
+    type: "KILL_MOB"
+    objectives:
+      target: 50
+      mob: "CREEPER"
+    points: 150
+    repeatable: false
+    rewards:
+      - type: "COMMAND"
+        description: "5 TNT"
+        data:
+          command: "give {player} tnt 5"

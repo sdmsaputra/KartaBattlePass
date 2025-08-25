@@ -1,0 +1,31 @@
+# ----------------------------------------------------------------------------------
+# KartaBattlePass Messages
+#
+# All messages support MiniMessage format.
+# Learn more: https://docs.advntr.dev/minimessage/format.html
+# ----------------------------------------------------------------------------------
+
+prefix: "<dark_gray>[<gold>KBP</gold>]<gray> "
+
+# General command messages
+command:
+  no-permission: "<prefix><red>You do not have permission to use this command."
+  unknown-command: "<prefix><red>Unknown command. Use <yellow>/kbp help</yellow> for help."
+  reload: "<prefix><green>Configuration reloaded successfully."
+
+# Quest related messages
+quest:
+  progress: "<prefix>Quest progress for <yellow>{quest_name}</yellow>: <green>{quest_progress}</green>"
+  completed: "<prefix><gold>Quest Complete!</gold> You finished <yellow>{quest_name}</yellow> and earned <green>{points} points</green>!"
+
+# Reward related messages
+reward:
+  claimed: "<prefix><green>You have claimed the rewards for Tier <yellow>{tier}</yellow>!"
+  already-claimed: "<prefix><red>You have already claimed the rewards for this tier."
+  tier-locked: "<prefix><red>You must reach Tier <yellow>{tier}</yellow> to claim these rewards."
+
+# Pass related messages
+pass:
+  purchased-premium: "<prefix><green>You have successfully purchased the <gold>Premium Pass</gold>!"
+  gifted: "<prefix><green>You have gifted a <gold>{pass_type} Pass</gold> to <yellow>{player}</yellow>."
+  received_gift: "<prefix><green>You have received a <gold>{pass_type} Pass</gold> from <yellow>{player}</yellow>!"

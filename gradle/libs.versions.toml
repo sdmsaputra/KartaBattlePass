@@ -1,0 +1,88 @@
+[versions]
+# Project
+java = "21"
+paper = "1.21-R0.1-SNAPSHOT"
+adventure = "4.17.0"
+folia = "1.21-R0.1-SNAPSHOT"
+
+# Libraries
+caffeine = "3.1.8"
+hikaricp = "5.1.0"
+flyway = "10.15.0"
+jdbi = "3.45.2"
+jackson = "2.17.1"
+snakeyaml = "2.2"
+lettuce = "6.3.2.RELEASE"
+bstats = "3.0.2"
+jetbrainsAnnotations = "24.1.0"
+
+# Plugin Hooks (compileOnly)
+vault = "1.7.3"
+placeholderapi = "2.11.6"
+citizens = "2.0.33-SNAPSHOT"
+mythicmobs = "5.6.1"
+protocollib = "5.2.0-SNAPSHOT"
+luckperms = "5.4"
+worldguard = "7.0.10" # For optional region checks
+
+# Testing
+junit = "5.10.2"
+mockbukkit = "2.29.0"
+assertj = "3.26.0"
+
+# Gradle Plugins
+shadow = "8.1.1"
+spotless = "6.25.0"
+checkstyle = "10.17.0"
+errorprone = "4.2.0" # Gradle ErrorProne plugin version
+
+[libraries]
+# Core
+caffeine = { module = "com.github.ben-manes.caffeine:caffeine", version.ref = "caffeine" }
+hikaricp = { module = "com.zaxxer:HikariCP", version.ref = "hikaricp" }
+flyway-core = { module = "org.flywaydb:flyway-core", version.ref = "flyway" }
+flyway-mysql = { module = "org.flywaydb:flyway-mysql", version.ref = "flyway" }
+flyway-postgres = { module = "org.flywaydb:flyway-database-postgresql", version.ref = "flyway" }
+jdbi-core = { module = "org.jdbi:jdbi3-core", version.ref = "jdbi" }
+jdbi-sqlobject = { module = "org.jdbi:jdbi3-sqlobject", version.ref = "jdbi" }
+jackson-databind = { module = "com.fasterxml.jackson.core:jackson-databind", version.ref = "jackson" }
+jackson-dataformat-yaml = { module = "com.fasterxml.jackson.dataformat:jackson-dataformat-yaml", version.ref = "jackson" }
+snakeyaml = { module = "org.yaml:snakeyaml", version.ref = "snakeyaml" }
+lettuce = { module = "io.lettuce:lettuce-core", version.ref = "lettuce" }
+bstats = { module = "org.bstats:bstats-bukkit", version.ref = "bstats" }
+jetbrains-annotations = { module = "org.jetbrains:annotations", version.ref = "jetbrainsAnnotations" }
+
+# Paper / Bukkit
+paper-api = { module = "io.papermc.paper:paper-api", version.ref = "paper" }
+folia-api = { module = "dev.folia:folia-api", version.ref = "folia" }
+adventure-api = { module = "net.kyori:adventure-api", version.ref = "adventure" }
+adventure-platform-bukkit = { module = "net.kyori:adventure-platform-bukkit", version.ref = "adventure" }
+adventure-text-minimessage = { module = "net.kyori:adventure-text-minimessage", version.ref = "adventure" }
+
+# Plugin Hooks (compileOnly)
+vault-api = { module = "com.github.MilkBowl:VaultAPI", version.ref = "vault" }
+placeholderapi = { module = "me.clip:placeholderapi", version.ref = "placeholderapi" }
+citizens = { module = "net.citizensnpcs:citizens-main", version.ref = "citizens" }
+mythicmobs-api = { module = "io.lumine:Mythic-Dist", version.ref = "mythicmobs" } # Use the full dist for API
+protocollib = { module = "com.comphenix.protocol:ProtocolLib", version.ref = "protocollib" }
+luckperms-api = { module = "net.luckperms:api", version.ref = "luckperms" }
+worldguard = { module = "com.sk89q.worldguard:worldguard-bukkit", version.ref = "worldguard" }
+
+# Testing
+junit-api = { module = "org.junit.jupiter:junit-jupiter-api", version.ref = "junit" }
+junit-engine = { module = "org.junit.jupiter:junit-jupiter-engine", version.ref = "junit" }
+junit-params = { module = "org.junit.jupiter:junit-jupiter-params", version.ref = "junit" }
+mockbukkit = { module = "com.github.seeseemelk:MockBukkit-v1.21", version.ref = "mockbukkit" }
+assertj = { module = "org.assertj:assertj-core", version.ref = "assertj" }
+
+[plugins]
+shadow = { id = "com.github.johnrengelman.shadow", version.ref = "shadow" }
+spotless = { id = "com.diffplug.spotless", version.ref = "spotless" }
+checkstyle = { id = "checkstyle", version.ref = "checkstyle" } # Note: This is a core plugin, version is for the tool
+errorprone = { id = "net.ltgt.errorprone", version.ref = "errorprone" }
+
+[bundles]
+adventure = ["adventure-api", "adventure-platform-bukkit", "adventure-text-minimessage"]
+jdbi = ["jdbi-core", "jdbi-sqlobject"]
+jackson = ["jackson-databind", "jackson-dataformat-yaml"]
+testing = ["junit-api", "junit-engine", "junit-params", "mockbukkit", "assertj"]

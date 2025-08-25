@@ -1,0 +1,89 @@
+# ----------------------------------------------------------------------------------
+# KartaBattlePass Main Configuration
+# ----------------------------------------------------------------------------------
+
+# Storage configuration for all plugin data.
+# type: MYSQL, POSTGRESQL, or SQLITE
+storage:
+  type: SQLITE
+  url: "jdbc:sqlite:{plugin_dir}/data/kartabattlepass.db"
+  username: ""
+  password: ""
+  schema: "kbp"
+  pool:
+    max-pool-size: 10
+    connection-timeout: 30 # seconds
+    idle-timeout: 600 # seconds (10 minutes)
+    max-lifetime: 1800 # seconds (30 minutes)
+
+# Redis configuration for network-wide features (e.g., global boosters, leaderboards).
+# Disabled by default.
+redis:
+  enabled: false
+  uri: "redis://localhost:6379"
+  channels:
+    boosters: "kbp:boosters"
+    leaderboard: "kbp:leaderboard"
+
+# Economy provider settings.
+# provider: VAULT, KARTA_EMERALD, or INTERNAL
+economy:
+  provider: "VAULT"
+  currency-name: "Dollar"
+  price-premium: 20.0
+
+# Season configuration.
+# Timestamps are in ISO-8601 format. Timezone is a valid ZoneId.
+season:
+  name: "Season 1"
+  start: "2025-01-01T00:00:00Z"
+  end: "2025-03-31T23:59:59Z"
+  timezone: "Asia/Jakarta"
+  auto-reset: true
+
+# Daily quest reset time.
+daily:
+  reset-time: "02:00"
+  timezone: "Asia/Jakarta"
+
+# Weekly quest reset day and time.
+weekly:
+  reset-day: "MONDAY"
+  reset-time: "02:00"
+  timezone: "Asia/Jakarta"
+
+# Leaderboard settings.
+leaderboard:
+  size: 100
+  snapshot-interval-minutes: 30
+  network-mode: false # Set to true if using Redis
+
+# Booster settings.
+boosters:
+  default-stacking: SUM_DIFFERENT # SUM, SUM_DIFFERENT, HIGHEST
+
+# GUI settings.
+gui:
+  theme: "default"
+  sounds: true
+  titles: true
+
+# PlaceholderAPI settings.
+placeholders:
+  cache-ms: 2000
+
+# Metrics settings.
+metrics:
+  bstats: true
+  log-performance: false
+
+# Folia support.
+# enabled: true, false, or auto (detects automatically)
+folia:
+  enabled: auto
+
+# Enable extra debug logging.
+debug: false
+
+# Do not change this.
+config-version: 1

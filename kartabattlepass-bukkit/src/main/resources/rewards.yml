@@ -1,0 +1,39 @@
+# ----------------------------------------------------------------------------------
+# KartaBattlePass Tier Rewards
+#
+# Define the rewards for each battle pass tier here.
+# ----------------------------------------------------------------------------------
+
+tiers:
+  "1":
+    points-required: 0
+    free:
+      - type: "COMMAND"
+        description: "500 in-game currency"
+        data:
+          command: "eco give {player} 500"
+    premium:
+      - type: "COMMAND"
+        description: "A special cosmetic key"
+        data:
+          command: "crate give {player} cosmetic 1"
+  "2":
+    points-required: 100
+    free: []
+    premium:
+      - type: "COMMAND"
+        description: "A special particle effect"
+        data:
+          command: "particles give {player} premium_trail"
+  "50":
+    points-required: 5000
+    free:
+      - type: "COMMAND"
+        description: "A unique title"
+        data:
+          command: "lp user {player} meta setprefix \"&6[Veteran]\""
+    premium:
+      - type: "COMMAND"
+        description: "A legendary weapon"
+        data:
+          command: "mythicitem get {player} legendary_sword"
