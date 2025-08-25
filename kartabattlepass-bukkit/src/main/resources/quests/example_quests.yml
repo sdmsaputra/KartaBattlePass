@@ -1,0 +1,42 @@
+quests:
+  daily_break_logs:
+    name: "Lumberjack"
+    description:
+      - "<gray>Chop down <green>64</green> Oak Logs."
+    category: DAILY
+    type: "BREAK_BLOCK" # This type will be registered by the plugin
+    objectives:
+      target: 64
+      block: "OAK_LOG"
+    points: 50
+    repeatable: false
+    rewards:
+      - type: "COMMAND"
+        description: "Receive 10 Diamonds"
+        data:
+          command: "give {player} diamond 10"
+
+  weekly_kill_zombies:
+    name: "Zombie Slayer"
+    description:
+      - "<gray>Defeat <red>100</red> Zombies."
+    category: WEEKLY
+    type: "KILL_MOB"
+    objectives:
+      target: 100
+      mob: "ZOMBIE"
+    points: 250
+    repeatable: false
+    rewards: []
+
+  seasonal_playtime:
+    name: "Dedicated"
+    description:
+      - "<gray>Play on the server for <blue>20</blue> hours."
+    category: SEASONAL
+    type: "PLAYTIME"
+    objectives:
+      target: 72000 # 20 hours in seconds
+    points: 1000
+    repeatable: false
+    rewards: []
